@@ -1,0 +1,335 @@
+{% extends "layout/base.html" %}
+
+{% block title %}
+Login | PaveSense AI
+{% endblock %}
+
+{% block content %}
+
+<section class="login-section">
+
+    <div class="container">
+
+        <div class="row login-wrapper shadow-lg">
+
+            <!-- ================================================= -->
+            <!-- LEFT SIDE -->
+            <!-- ================================================= -->
+
+            <div class="col-lg-6 login-left">
+
+                <div class="login-brand">
+
+                    <h1>PaveSense AI</h1>
+
+                    <p class="tagline">
+                        Making Roads Safer with Artificial Intelligence
+                    </p>
+
+                    <div class="illustration">
+                        🚧 🛣️ 🤖
+                    </div>
+
+                    <p class="small-text">
+                        Detect road damage • Generate complaints •
+                        Track submissions • Help improve roads.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- ================================================= -->
+            <!-- RIGHT SIDE -->
+            <!-- ================================================= -->
+
+            <div class="col-lg-6 login-right">
+
+                <div class="login-card">
+
+                    <h2>Welcome Back 👋</h2>
+
+                    <p class="text-muted">
+                        Login to continue
+                    </p>
+
+
+                    <!-- ================================================= -->
+                    <!-- FLASH MESSAGES -->
+                    <!-- ================================================= -->
+
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+
+                        {% if messages %}
+
+                            {% for category, message in messages %}
+
+                                <div
+                                    class="alert
+                                    {% if category == 'success' %}
+                                        alert-success
+                                    {% else %}
+                                        alert-danger
+                                    {% endif %}
+                                    alert-dismissible fade show"
+                                    role="alert"
+                                >
+
+                                    {% if category == "success" %}
+                                        ✅
+                                    {% else %}
+                                        ❌
+                                    {% endif %}
+
+                                    {{ message }}
+
+                                    <button
+                                        type="button"
+                                        class="btn-close"
+                                        data-bs-dismiss="alert"
+                                        aria-label="Close">
+                                    </button>
+
+                                </div>
+
+                            {% endfor %}
+
+                        {% endif %}
+
+                    {% endwith %}
+
+
+                    <!-- ================================================= -->
+                    <!-- GOOGLE LOGIN -->
+                    <!-- ================================================= -->
+
+                    <a
+                        href="{{ url_for('auth.google_login') }}"
+                        class="google-btn"
+                    >
+
+                        <img
+                            src="https://www.svgrepo.com/show/475656/google-color.svg"
+                            width="22"
+                            height="22"
+                            alt="Google"
+                        >
+
+                        <span>
+                            Continue with Google
+                        </span>
+
+                    </a>
+
+
+                    <!-- ================================================= -->
+                    <!-- DIVIDER -->
+                    <!-- ================================================= -->
+
+                    <div class="divider">
+
+                        <span>OR</span>
+
+                    </div>
+
+
+                    <!-- ================================================= -->
+                    <!-- LOGIN FORM -->
+                    <!-- ================================================= -->
+
+                    <form
+                        action="{{ url_for('auth.login') }}"
+                        method="POST"
+                    >
+
+                        <!-- EMAIL -->
+
+                        <div class="mb-3">
+
+                            <label
+                                for="email"
+                                class="form-label"
+                            >
+                                Email Address
+                            </label>
+
+                            <input
+                                type="email"
+                                id="email"
+                                name="email"
+                                class="form-control"
+                                placeholder="Enter your email"
+                                autocomplete="email"
+                                required
+                            >
+
+                        </div>
+
+
+                        <!-- PASSWORD -->
+
+                        <div class="mb-3">
+
+                            <label
+                                for="password"
+                                class="form-label"
+                            >
+                                Password
+                            </label>
+
+                            <div class="password-wrapper">
+
+                                <input
+                                    type="password"
+                                    id="password"
+                                    name="password"
+                                    class="form-control password-input"
+                                    placeholder="Enter your password"
+                                    autocomplete="current-password"
+                                    required
+                                >
+
+                                <!-- SHOW / HIDE PASSWORD -->
+
+                                <button
+                                    type="button"
+                                    class="password-toggle"
+                                    id="passwordToggle"
+                                    aria-label="Show password"
+                                    title="Show password"
+                                >
+                                    👁️
+                                </button>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- REMEMBER + FORGOT PASSWORD -->
+
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+
+                            <div class="remember-container">
+
+                                <input
+                                    type="checkbox"
+                                    id="remember"
+                                    name="remember"
+                                >
+
+                                <label for="remember">
+                                    Remember me
+                                </label>
+
+                            </div>
+
+
+                            <a
+                                href="{{ url_for('auth.forgot_password') }}"
+                                class="forgot-link"
+                            >
+                                Forgot Password?
+                            </a>
+
+                        </div>
+
+
+                        <!-- LOGIN BUTTON -->
+
+                        <button
+                            type="submit"
+                            class="btn login-btn w-100"
+                        >
+                            🔐 Login
+                        </button>
+
+                    </form>
+
+
+                    <!-- ================================================= -->
+                    <!-- REGISTER -->
+                    <!-- ================================================= -->
+
+                    <div class="text-center mt-4">
+
+                        <span>
+                            Don't have an account?
+                        </span>
+
+                        <a
+                            href="{{ url_for('auth.register') }}"
+                        >
+                            Register
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- ========================================================= -->
+<!-- PASSWORD SHOW / HIDE -->
+<!-- ========================================================= -->
+
+<script>
+
+const passwordInput =
+    document.getElementById("password");
+
+const passwordToggle =
+    document.getElementById("passwordToggle");
+
+
+passwordToggle.addEventListener("click", function () {
+
+    if (passwordInput.type === "password") {
+
+        passwordInput.type = "text";
+
+        passwordToggle.textContent = "🙈";
+
+        passwordToggle.setAttribute(
+            "aria-label",
+            "Hide password"
+        );
+
+        passwordToggle.setAttribute(
+            "title",
+            "Hide password"
+        );
+
+    }
+
+    else {
+
+        passwordInput.type = "password";
+
+        passwordToggle.textContent = "👁️";
+
+        passwordToggle.setAttribute(
+            "aria-label",
+            "Show password"
+        );
+
+        passwordToggle.setAttribute(
+            "title",
+            "Show password"
+        );
+
+    }
+
+});
+
+</script>
+
+{% endblock %}

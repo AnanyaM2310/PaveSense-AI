@@ -1,0 +1,856 @@
+{% extends "layout/base.html" %}
+
+{% block title %}
+Complaint #{{ complaint.id }} | PaveSense AI
+{% endblock %}
+
+{% block content %}
+
+<section class="container py-5">
+
+    <!-- ================================================= -->
+    <!-- PAGE HEADER -->
+    <!-- ================================================= -->
+
+    <div class="text-center mb-5">
+
+        <h1>
+            Complaint #{{ complaint.id }}
+        </h1>
+
+        <p class="text-muted">
+            Complete details of your road damage complaint
+        </p>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- STATUS -->
+    <!-- ================================================= -->
+
+    <div class="feature-card mb-4">
+
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+
+            <div>
+
+                <h4 class="mb-1">
+                    Complaint Status
+                </h4>
+
+                <p class="text-muted mb-0">
+                    Current status of your complaint
+                </p>
+
+            </div>
+
+            <div>
+
+                {% if complaint.status == "Resolved" %}
+
+                    <span class="badge bg-success fs-6 px-3 py-2">
+                        ✓ Resolved
+                    </span>
+
+                {% elif complaint.status == "Pending" %}
+
+                    <span class="badge bg-warning text-dark fs-6 px-3 py-2">
+                        ⏳ Pending
+                    </span>
+
+                {% elif complaint.status == "Submitted" %}
+
+                    <span class="badge bg-primary fs-6 px-3 py-2">
+                        ✓ Submitted
+                    </span>
+
+                {% elif complaint.status == "Under Review" %}
+
+                    <span class="badge bg-info text-dark fs-6 px-3 py-2">
+                        Under Review
+                    </span>
+
+                {% else %}
+
+                    <span class="badge bg-secondary fs-6 px-3 py-2">
+                        {{ complaint.status or "Draft" }}
+                    </span>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- COMPLAINT INFORMATION -->
+    <!-- ================================================= -->
+
+    <div class="feature-card mb-4">
+
+        <h3 class="mb-4">
+            📋 Complaint Information
+        </h3>
+
+        <div class="row">
+
+            <div class="col-md-6 mb-3">
+
+                <strong>Complaint ID</strong>
+
+                <p class="text-muted">
+                    #{{ complaint.id }}
+                </p>
+
+            </div>
+
+
+            <div class="col-md-6 mb-3">
+
+                <strong>Date Created</strong>
+
+                <p class="text-muted">
+
+                    {% if complaint.created_at %}
+
+                        {{ complaint.created_at.strftime("%d-%m-%Y %I:%M %p") }}
+
+                    {% else %}
+
+                        Not available
+
+                    {% endif %}
+
+                </p>
+
+            </div>
+
+
+            <div class="col-md-6 mb-3">
+
+                <strong>Complaint Number</strong>
+
+                <p class="text-muted">
+
+                    {% if complaint.complaint_number %}
+
+                        {{ complaint.complaint_number }}
+
+                    {% else %}
+
+                        Not generated yet
+
+                    {% endif %}
+
+                </p>
+
+            </div>
+
+
+            <div class="col-md-6 mb-3">
+
+                <strong>Language</strong>
+
+                <p class="text-muted">
+
+                    {% if complaint.language %}
+
+                        {{ complaint.language }}
+
+                    {% else %}
+
+                        Not available
+
+                    {% endif %}
+
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- UPLOADED IMAGE -->
+    <!-- ================================================= -->
+
+    <div class="feature-card mb-4">
+
+        <h3 class="mb-4">
+            🖼️ Uploaded Road Image
+        </h3>
+
+        {% if complaint.image_path %}
+
+            <div class="text-center">
+
+                <img
+                    src="{{ url_for('static', filename='uploads/' + complaint.image_path) }}"
+                    alt="Uploaded Road Damage Image"
+                    class="img-fluid rounded shadow"
+                    style="max-height: 450px; object-fit: contain;"
+                >
+
+            </div>
+
+        {% else %}
+
+            <p class="text-muted">
+                No image was uploaded for this complaint.
+            </p>
+
+        {% endif %}
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- ISSUE DESCRIPTION -->
+    <!-- ================================================= -->
+
+    <div class="feature-card mb-4">
+
+        <h3 class="mb-4">
+            📝 Issue Description
+        </h3>
+
+
+        <div class="mb-4">
+
+            <h6>
+                Original Description
+            </h6>
+
+            <div class="p-3 bg-light rounded">
+
+                {% if complaint.description %}
+
+                    {{ complaint.description }}
+
+                {% else %}
+
+                    <span class="text-muted">
+                        No description provided.
+                    </span>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+
+        <div>
+
+            <h6>
+                English Description
+            </h6>
+
+            <div class="p-3 bg-light rounded">
+
+                {% if complaint.english_description %}
+
+                    {{ complaint.english_description }}
+
+                {% else %}
+
+                    <span class="text-muted">
+                        Not available.
+                    </span>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- AI ANALYSIS -->
+    <!-- ================================================= -->
+
+    <div class="feature-card mb-4">
+
+        <h3 class="mb-4">
+            🤖 AI Analysis
+        </h3>
+
+        <div class="row">
+
+            <!-- DAMAGE TYPE -->
+
+            <div class="col-md-4 mb-4">
+
+                <h6>
+                    Damage Type
+                </h6>
+
+                {% if complaint.damage_type %}
+
+                    <span class="badge bg-primary fs-6 px-3 py-2">
+
+                        {{ complaint.damage_type }}
+
+                    </span>
+
+                {% else %}
+
+                    <p class="text-muted">
+                        Not analyzed yet
+                    </p>
+
+                {% endif %}
+
+            </div>
+
+
+            <!-- SEVERITY -->
+
+            <div class="col-md-4 mb-4">
+
+                <h6>
+                    Severity
+                </h6>
+
+                {% if complaint.severity %}
+
+                    {% if complaint.severity|upper == "HIGH" %}
+
+                        <span class="badge bg-danger fs-6 px-3 py-2">
+                            HIGH
+                        </span>
+
+                    {% elif complaint.severity|upper == "MEDIUM" %}
+
+                        <span class="badge bg-warning text-dark fs-6 px-3 py-2">
+                            MEDIUM
+                        </span>
+
+                    {% elif complaint.severity|upper == "LOW" %}
+
+                        <span class="badge bg-success fs-6 px-3 py-2">
+                            LOW
+                        </span>
+
+                    {% else %}
+
+                        <span class="badge bg-secondary fs-6 px-3 py-2">
+                            {{ complaint.severity }}
+                        </span>
+
+                    {% endif %}
+
+                {% else %}
+
+                    <p class="text-muted">
+                        Not analyzed yet
+                    </p>
+
+                {% endif %}
+
+            </div>
+
+
+            <!-- CONFIDENCE -->
+
+            <div class="col-md-4 mb-4">
+
+                <h6>
+                    AI Confidence
+                </h6>
+
+                {% if complaint.ai_confidence is not none %}
+
+                    <p class="text-muted">
+
+                        {{ "%.2f"|format(complaint.ai_confidence) }}%
+
+                    </p>
+
+                {% else %}
+
+                    <p class="text-muted">
+                        Not available
+                    </p>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- APPLICANT DETAILS -->
+    <!-- ================================================= -->
+
+    <div class="feature-card mb-4">
+
+        <h3 class="mb-4">
+            👤 Applicant Details
+        </h3>
+
+        <div class="row">
+
+            <div class="col-md-6 mb-3">
+
+                <strong>Name</strong>
+
+                <p class="text-muted">
+                    {{ complaint.applicant_name or "Not provided" }}
+                </p>
+
+            </div>
+
+
+            <div class="col-md-6 mb-3">
+
+                <strong>Email</strong>
+
+                <p class="text-muted">
+                    {{ complaint.email or "Not provided" }}
+                </p>
+
+            </div>
+
+
+            <div class="col-md-6 mb-3">
+
+                <strong>Phone Number</strong>
+
+                <p class="text-muted">
+                    {{ complaint.phone or "Not provided" }}
+                </p>
+
+            </div>
+
+
+            <div class="col-md-6 mb-3">
+
+                <strong>Applying For</strong>
+
+                <p class="text-muted">
+                    {{ complaint.applying_for or "Not provided" }}
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- ADDRESS DETAILS -->
+    <!-- ================================================= -->
+
+    <div class="feature-card mb-4">
+
+        <h3 class="mb-4">
+            📍 Address Details
+        </h3>
+
+        <div class="row">
+
+            <div class="col-md-6 mb-3">
+
+                <strong>Country</strong>
+
+                <p class="text-muted">
+                    {{ complaint.country or "Not provided" }}
+                </p>
+
+            </div>
+
+
+            <div class="col-md-6 mb-3">
+
+                <strong>State</strong>
+
+                <p class="text-muted">
+                    {{ complaint.state or "Not provided" }}
+                </p>
+
+            </div>
+
+
+            <div class="col-md-6 mb-3">
+
+                <strong>District</strong>
+
+                <p class="text-muted">
+                    {{ complaint.district or "Not provided" }}
+                </p>
+
+            </div>
+
+
+            <div class="col-md-6 mb-3">
+
+                <strong>Local Body</strong>
+
+                <p class="text-muted">
+                    {{ complaint.local_body or "Not provided" }}
+                </p>
+
+            </div>
+
+
+            <div class="col-md-6 mb-3">
+
+                <strong>Ward</strong>
+
+                <p class="text-muted">
+                    {{ complaint.ward or "Not provided" }}
+                </p>
+
+            </div>
+
+
+            <div class="col-md-6 mb-3">
+
+                <strong>House Number</strong>
+
+                <p class="text-muted">
+                    {{ complaint.house_no or "Not provided" }}
+                </p>
+
+            </div>
+
+
+            <div class="col-md-6 mb-3">
+
+                <strong>Post Office</strong>
+
+                <p class="text-muted">
+                    {{ complaint.post_office or "Not provided" }}
+                </p>
+
+            </div>
+
+
+            <div class="col-md-6 mb-3">
+
+                <strong>Pincode</strong>
+
+                <p class="text-muted">
+                    {{ complaint.pincode or "Not provided" }}
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- ROAD DETAILS -->
+    <!-- ================================================= -->
+
+    <div class="feature-card mb-4">
+
+        <h3 class="mb-4">
+            🛣️ Road Details
+        </h3>
+
+        <div class="row">
+
+            <div class="col-md-6 mb-3">
+
+                <strong>Road Type</strong>
+
+                <p class="text-muted">
+
+                    {% if complaint.road_type == "NH" %}
+
+                        National Highway
+
+                    {% elif complaint.road_type == "SH" %}
+
+                        State Highway
+
+                    {% elif complaint.road_type == "Urban" %}
+
+                        Urban Road
+
+                    {% elif complaint.road_type == "Rural" %}
+
+                        Rural Road
+
+                    {% elif complaint.road_type %}
+
+                        {{ complaint.road_type }}
+
+                    {% else %}
+
+                        Not Provided
+
+                    {% endif %}
+
+                </p>
+
+            </div>
+
+
+            {% if complaint.road_type == "NH" %}
+
+            <div class="col-md-6 mb-3">
+
+                <strong>National Highway Number</strong>
+
+                <p class="text-muted">
+
+                    {{ complaint.nh_number or "Not Provided" }}
+
+                </p>
+
+            </div>
+
+            {% endif %}
+
+
+            {% if complaint.road_type == "SH" %}
+
+            <div class="col-md-6 mb-3">
+
+                <strong>State Highway State</strong>
+
+                <p class="text-muted">
+
+                    {{ complaint.highway_state or "Not Provided" }}
+
+                </p>
+
+            </div>
+
+
+            <div class="col-md-6 mb-3">
+
+                <strong>State Highway Number</strong>
+
+                <p class="text-muted">
+
+                    {{ complaint.sh_number or "Not Provided" }}
+
+                </p>
+
+            </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- INCIDENT DETAILS -->
+    <!-- ================================================= -->
+
+    <div class="feature-card mb-4">
+
+        <h3 class="mb-4">
+            📅 Incident Details
+        </h3>
+
+        <div class="row">
+
+            <div class="col-md-6 mb-3">
+
+                <strong>Incident Date</strong>
+
+                <p class="text-muted">
+
+                    {% if complaint.incident_date %}
+
+                        {{ complaint.incident_date.strftime("%d-%m-%Y") }}
+
+                    {% else %}
+
+                        Not Provided
+
+                    {% endif %}
+
+                </p>
+
+            </div>
+
+
+            <div class="col-md-6 mb-3">
+
+                <strong>Incident Time</strong>
+
+                <p class="text-muted">
+
+                    {% if complaint.incident_time %}
+
+                        {{ complaint.incident_time.strftime("%I:%M %p") }}
+
+                    {% else %}
+
+                        Not Provided
+
+                    {% endif %}
+
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- LOCATION -->
+    <!-- ================================================= -->
+
+    <div class="feature-card mb-4">
+
+        <h3 class="mb-4">
+            🌍 GPS Location
+        </h3>
+
+        <div class="row">
+
+            <div class="col-md-6 mb-3">
+
+                <strong>Latitude</strong>
+
+                <p class="text-muted">
+
+                    {% if complaint.latitude is not none %}
+
+                        {{ complaint.latitude }}
+
+                    {% else %}
+
+                        Location not available
+
+                    {% endif %}
+
+                </p>
+
+            </div>
+
+
+            <div class="col-md-6 mb-3">
+
+                <strong>Longitude</strong>
+
+                <p class="text-muted">
+
+                    {% if complaint.longitude is not none %}
+
+                        {{ complaint.longitude }}
+
+                    {% else %}
+
+                        Location not available
+
+                    {% endif %}
+
+                </p>
+
+            </div>
+
+        </div>
+
+
+        {% if complaint.latitude is not none and complaint.longitude is not none %}
+
+            <div class="text-center mt-3">
+
+                <a
+                    href="https://www.google.com/maps?q={{ complaint.latitude }},{{ complaint.longitude }}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="btn btn-outline-primary"
+                >
+                    📍 View Location on Map
+                </a>
+
+            </div>
+
+        {% else %}
+
+            <div class="alert alert-secondary mt-3">
+
+                📍 GPS / map location has not been recorded for this complaint.
+
+            </div>
+
+        {% endif %}
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- AI GENERATED COMPLAINT -->
+    <!-- ================================================= -->
+
+    <div class="feature-card mb-4">
+
+        <h3 class="mb-4">
+            📄 AI Generated Complaint
+        </h3>
+
+        {% if complaint.complaint_text %}
+
+            <div
+                class="p-4 bg-light rounded"
+                style="white-space: pre-line;"
+            >
+
+                {{ complaint.complaint_text }}
+
+            </div>
+
+        {% else %}
+
+            <p class="text-muted">
+                AI-generated complaint has not been created yet.
+            </p>
+
+        {% endif %}
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- BOTTOM BUTTONS -->
+    <!-- ================================================= -->
+
+    <div class="text-center mt-5">
+
+        <a
+            href="{{ url_for('dashboard.history') }}"
+            class="btn btn-outline-dark px-4 me-2"
+        >
+            ← Back to My Complaints
+        </a>
+
+
+        <a
+            href="{{ url_for('dashboard.home') }}"
+            class="btn btn-primary px-4"
+        >
+            Dashboard
+        </a>
+
+    </div>
+
+</section>
+
+{% endblock %}

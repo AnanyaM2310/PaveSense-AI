@@ -1,0 +1,440 @@
+{% extends "layout/base.html" %}
+
+{% block title %}
+Road Details | PaveSense AI
+{% endblock %}
+
+{% block content %}
+
+<section class="container py-5">
+
+    <div class="row justify-content-center">
+
+        <div class="col-lg-8">
+
+            <!-- Progress -->
+
+            <div class="progress mb-3" style="height: 10px;">
+
+                <div
+                    class="progress-bar bg-success"
+                    style="width: 50%;">
+                </div>
+
+            </div>
+
+            <p class="text-muted mb-4">
+                Step 4 of 8 • Road Details
+            </p>
+
+
+            <!-- Main Card -->
+
+            <div class="feature-card">
+
+                <h2 class="mb-4 text-center">
+                    🛣️ Road Details
+                </h2>
+
+
+                <!-- FORM -->
+
+                <form
+                    action="{{ url_for('complaint.road_details') }}"
+                    method="POST"
+                >
+
+
+                    <!-- ================================= -->
+                    <!-- ROAD TYPE -->
+                    <!-- ================================= -->
+
+                    <div class="mb-4">
+
+                        <label
+                            for="roadType"
+                            class="form-label"
+                        >
+                            Road Type
+                        </label>
+
+                        <select
+                            id="roadType"
+                            name="road_type"
+                            class="form-select"
+                            required
+                        >
+
+                            <option
+                                value=""
+                                selected
+                                disabled
+                            >
+                                Select Road Type
+                            </option>
+
+                            <option value="NH">
+                                National Highway
+                            </option>
+
+                            <option value="SH">
+                                State Highway
+                            </option>
+
+                            <option value="Urban">
+                                Urban Road
+                            </option>
+
+                            <option value="Rural">
+                                Rural Road
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- ================================= -->
+                    <!-- NATIONAL HIGHWAY -->
+                    <!-- ================================= -->
+
+                    <div
+                        id="nhField"
+                        style="display: none;"
+                    >
+
+                        <div class="mb-4">
+
+                            <label
+                                for="nhNumber"
+                                class="form-label"
+                            >
+                                National Highway Number
+                            </label>
+
+                            <input
+                                type="text"
+                                id="nhNumber"
+                                name="nh_number"
+                                class="form-control"
+                                placeholder="Example: NH-66"
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ================================= -->
+                    <!-- STATE HIGHWAY -->
+                    <!-- ================================= -->
+
+                    <div
+                        id="shField"
+                        style="display: none;"
+                    >
+
+
+                        <!-- STATE -->
+
+                        <div class="mb-4">
+
+                            <label
+                                for="highwayState"
+                                class="form-label"
+                            >
+                                State / Union Territory
+                            </label>
+
+                            <select
+                                id="highwayState"
+                                name="highway_state"
+                                class="form-select"
+                            >
+
+                                <option
+                                    value=""
+                                    selected
+                                    disabled
+                                >
+                                    Select State / Union Territory
+                                </option>
+
+
+                                <!-- STATES -->
+
+                                <option value="Andhra Pradesh">
+                                    Andhra Pradesh
+                                </option>
+
+                                <option value="Arunachal Pradesh">
+                                    Arunachal Pradesh
+                                </option>
+
+                                <option value="Assam">
+                                    Assam
+                                </option>
+
+                                <option value="Bihar">
+                                    Bihar
+                                </option>
+
+                                <option value="Chhattisgarh">
+                                    Chhattisgarh
+                                </option>
+
+                                <option value="Goa">
+                                    Goa
+                                </option>
+
+                                <option value="Gujarat">
+                                    Gujarat
+                                </option>
+
+                                <option value="Haryana">
+                                    Haryana
+                                </option>
+
+                                <option value="Himachal Pradesh">
+                                    Himachal Pradesh
+                                </option>
+
+                                <option value="Jharkhand">
+                                    Jharkhand
+                                </option>
+
+                                <option value="Karnataka">
+                                    Karnataka
+                                </option>
+
+                                <option value="Kerala">
+                                    Kerala
+                                </option>
+
+                                <option value="Madhya Pradesh">
+                                    Madhya Pradesh
+                                </option>
+
+                                <option value="Maharashtra">
+                                    Maharashtra
+                                </option>
+
+                                <option value="Manipur">
+                                    Manipur
+                                </option>
+
+                                <option value="Meghalaya">
+                                    Meghalaya
+                                </option>
+
+                                <option value="Mizoram">
+                                    Mizoram
+                                </option>
+
+                                <option value="Nagaland">
+                                    Nagaland
+                                </option>
+
+                                <option value="Odisha">
+                                    Odisha
+                                </option>
+
+                                <option value="Punjab">
+                                    Punjab
+                                </option>
+
+                                <option value="Rajasthan">
+                                    Rajasthan
+                                </option>
+
+                                <option value="Sikkim">
+                                    Sikkim
+                                </option>
+
+                                <option value="Tamil Nadu">
+                                    Tamil Nadu
+                                </option>
+
+                                <option value="Telangana">
+                                    Telangana
+                                </option>
+
+                                <option value="Tripura">
+                                    Tripura
+                                </option>
+
+                                <option value="Uttar Pradesh">
+                                    Uttar Pradesh
+                                </option>
+
+                                <option value="Uttarakhand">
+                                    Uttarakhand
+                                </option>
+
+                                <option value="West Bengal">
+                                    West Bengal
+                                </option>
+
+
+                                <!-- UNION TERRITORIES -->
+
+                                <option value="Andaman and Nicobar Islands">
+                                    Andaman and Nicobar Islands
+                                </option>
+
+                                <option value="Chandigarh">
+                                    Chandigarh
+                                </option>
+
+                                <option value="Dadra and Nagar Haveli and Daman and Diu">
+                                    Dadra and Nagar Haveli and Daman and Diu
+                                </option>
+
+                                <option value="Delhi (NCT)">
+                                    Delhi (NCT)
+                                </option>
+
+                                <option value="Jammu and Kashmir">
+                                    Jammu and Kashmir
+                                </option>
+
+                                <option value="Ladakh">
+                                    Ladakh
+                                </option>
+
+                                <option value="Lakshadweep">
+                                    Lakshadweep
+                                </option>
+
+                                <option value="Puducherry">
+                                    Puducherry
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <!-- STATE HIGHWAY NUMBER -->
+
+                        <div class="mb-4">
+
+                            <label
+                                for="shNumber"
+                                class="form-label"
+                            >
+                                State Highway Number
+                            </label>
+
+                            <input
+                                type="text"
+                                id="shNumber"
+                                name="sh_number"
+                                class="form-control"
+                                placeholder="Example: SH-1"
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ================================= -->
+                    <!-- NAVIGATION BUTTONS -->
+                    <!-- ================================= -->
+
+                    <div class="mt-5 d-flex justify-content-between">
+
+                        <a
+                            href="{{ url_for('complaint.address') }}"
+                            class="btn btn-outline-secondary"
+                        >
+                            ← Previous
+                        </a>
+
+
+                        <button
+                            type="submit"
+                            class="btn btn-success px-5"
+                        >
+                            Next →
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- ================================= -->
+<!-- JAVASCRIPT -->
+<!-- ================================= -->
+
+<script>
+
+const roadType = document.getElementById("roadType");
+
+const nhField = document.getElementById("nhField");
+
+const shField = document.getElementById("shField");
+
+const nhNumber = document.getElementById("nhNumber");
+
+const highwayState = document.getElementById("highwayState");
+
+const shNumber = document.getElementById("shNumber");
+
+
+roadType.addEventListener("change", function () {
+
+    // Hide both sections first
+
+    nhField.style.display = "none";
+
+    shField.style.display = "none";
+
+
+    // Remove required attributes
+
+    nhNumber.removeAttribute("required");
+
+    highwayState.removeAttribute("required");
+
+    shNumber.removeAttribute("required");
+
+
+    // National Highway
+
+    if (this.value === "NH") {
+
+        nhField.style.display = "block";
+
+        nhNumber.setAttribute("required", "required");
+
+    }
+
+
+    // State Highway
+
+    if (this.value === "SH") {
+
+        shField.style.display = "block";
+
+        highwayState.setAttribute("required", "required");
+
+        shNumber.setAttribute("required", "required");
+
+    }
+
+});
+
+</script>
+
+{% endblock %}

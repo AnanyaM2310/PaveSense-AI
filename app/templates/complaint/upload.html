@@ -1,0 +1,216 @@
+{% extends "layout/base.html" %}
+
+{% block title %}
+Upload Road Image
+{% endblock %}
+
+{% block content %}
+
+<section class="container py-5">
+
+<div class="row justify-content-center">
+
+<div class="col-lg-9">
+
+<div class="feature-card">
+
+<div class="text-center mb-5">
+
+<h2>📤 Upload Road Image</h2>
+
+<p class="text-muted">
+
+Upload an image of the damaged road and briefly describe the issue.
+PaveSense AI will analyze the image, estimate the severity,
+identify the responsible authority, generate a professional complaint,
+and assist in submitting it automatically.
+
+</p>
+
+</div>
+
+<form method="POST" enctype="multipart/form-data">
+
+<!-- Upload Image -->
+
+<div class="mb-4">
+
+<label class="form-label fw-bold">
+
+Road Damage Image
+
+</label>
+
+<input
+type="file"
+name="image"
+class="form-control"
+accept="image/*"
+id="imageInput"
+required>
+
+</div>
+
+<!-- Image Preview -->
+
+<div class="text-center mb-5">
+
+<img
+id="preview"
+src="https://placehold.co/700x350?text=Image+Preview"
+class="img-fluid rounded shadow"
+style="max-height:350px;">
+
+</div>
+
+<!-- AI Card -->
+
+<div class="alert alert-info d-flex align-items-center">
+
+<div class="me-3" style="font-size:45px;">
+
+🤖
+
+</div>
+
+<div>
+
+<h5 class="mb-1">
+
+AI Ready to Analyze
+
+</h5>
+
+<small>
+
+After upload, PaveSense AI will detect road damage,
+estimate severity, identify the responsible authority,
+generate a professional complaint, and prepare it for submission.
+
+</small>
+
+</div>
+
+</div>
+
+<!-- Language -->
+
+<div class="mb-4">
+
+<label class="form-label fw-bold">
+
+Complaint Language
+
+</label>
+
+<select
+name="language"
+class="form-select"
+required>
+
+<option value="auto">🌐 Auto Detect</option>
+<option value="en">English</option>
+<option value="ml">Malayalam</option>
+<option value="hi">Hindi</option>
+<option value="ta">Tamil</option>
+<option value="te">Telugu</option>
+<option value="kn">Kannada</option>
+<option value="mr">Marathi</option>
+<option value="gu">Gujarati</option>
+<option value="bn">Bengali</option>
+<option value="pa">Punjabi</option>
+<option value="or">Odia</option>
+<option value="as">Assamese</option>
+<option value="ur">Urdu</option>
+<option value="ne">Nepali</option>
+<option value="kok">Konkani</option>
+<option value="sd">Sindhi</option>
+<option value="doi">Dogri</option>
+<option value="mai">Maithili</option>
+<option value="mni">Manipuri (Meitei)</option>
+<option value="sa">Sanskrit</option>
+<option value="sat">Santali</option>
+<option value="brx">Bodo</option>
+
+</select>
+
+<small class="text-muted">
+
+You may describe the issue in any Indian language.
+PaveSense AI will automatically detect and translate it into English before generating the complaint.
+
+</small>
+
+</div>
+
+<!-- Description -->
+
+<div class="mb-4">
+
+<label class="form-label fw-bold">
+
+Describe the Road Issue
+
+</label>
+
+<textarea
+name="description"
+class="form-control"
+rows="6"
+placeholder="Example: There is a large pothole near the bus stop causing frequent accidents during rain."
+required></textarea>
+
+</div>
+
+<!-- Buttons -->
+
+<div class="d-flex justify-content-between">
+
+<a
+href="{{ url_for('dashboard.home') }}"
+class="btn btn-outline-secondary">
+
+← Dashboard
+
+</a>
+
+<button
+type="submit"
+class="btn btn-success px-5">
+
+Next →
+
+</button>
+
+</div>
+
+</form>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+<script>
+
+const imageInput = document.getElementById("imageInput");
+const preview = document.getElementById("preview");
+
+imageInput.addEventListener("change", function(){
+
+    const file = this.files[0];
+
+    if(file){
+
+        preview.src = URL.createObjectURL(file);
+
+    }
+
+});
+
+</script>
+
+{% endblock %}

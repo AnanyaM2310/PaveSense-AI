@@ -1,0 +1,274 @@
+{% extends "layout/base.html" %}
+
+{% block title %}
+Incident Details | PaveSense AI
+{% endblock %}
+
+{% block content %}
+
+<section class="container py-5">
+
+    <div class="row justify-content-center">
+
+        <div class="col-lg-8">
+
+            <!-- Progress -->
+
+            <div class="progress mb-3" style="height: 10px;">
+
+                <div
+                    class="progress-bar bg-success"
+                    style="width: 62.5%;">
+                </div>
+
+            </div>
+
+            <p class="text-muted mb-4">
+                Step 5 of 8 • Incident Details
+            </p>
+
+
+            <div class="feature-card">
+
+                <h2 class="text-center mb-5">
+                    📍 Incident Details
+                </h2>
+
+
+                <form
+                    action="{{ url_for('complaint.incident') }}"
+                    method="POST"
+                >
+
+
+                    <!-- INCIDENT DATE -->
+
+                    <div class="mb-4">
+
+                        <label
+                            for="incidentDate"
+                            class="form-label"
+                        >
+                            Date of Incident
+                        </label>
+
+                        <input
+                            type="date"
+                            id="incidentDate"
+                            name="incident_date"
+                            class="form-control"
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- INCIDENT TIME -->
+
+                    <div class="mb-4">
+
+                        <label
+                            for="incidentTime"
+                            class="form-label"
+                        >
+                            Approximate Time of Incident
+                        </label>
+
+                        <input
+                            type="time"
+                            id="incidentTime"
+                            name="incident_time"
+                            class="form-control"
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- LOCATION -->
+
+                    <div class="mb-4">
+
+                        <label class="form-label">
+                            Incident Location
+                        </label>
+
+                        <div class="d-grid gap-2">
+
+                            <button
+                                type="button"
+                                id="gpsBtn"
+                                class="btn btn-outline-success"
+                            >
+                                📍 Use Current GPS Location
+                            </button>
+
+
+                            <button
+                                type="button"
+                                id="mapBtn"
+                                class="btn btn-outline-primary"
+                            >
+                                🗺️ Select Location on Map
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- LOCATION STATUS -->
+
+                    <div
+                        id="locationMessage"
+                        class="alert alert-light border text-center"
+                    >
+
+                        Location has not been selected yet.
+
+                    </div>
+
+
+                    <!-- LATITUDE -->
+
+                    <input
+                        type="hidden"
+                        id="latitude"
+                        name="latitude"
+                    >
+
+
+                    <!-- LONGITUDE -->
+
+                    <input
+                        type="hidden"
+                        id="longitude"
+                        name="longitude"
+                    >
+
+
+                    <!-- BUTTONS -->
+
+                    <div class="mt-5 d-flex justify-content-between">
+
+                        <a
+                            href="{{ url_for('complaint.road_details') }}"
+                            class="btn btn-outline-secondary"
+                        >
+                            ← Previous
+                        </a>
+
+
+                        <button
+                            type="submit"
+                            class="btn btn-success px-5"
+                        >
+                            Next →
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<script>
+
+const gpsBtn = document.getElementById("gpsBtn");
+
+const mapBtn = document.getElementById("mapBtn");
+
+const locationMessage =
+    document.getElementById("locationMessage");
+
+const latitude =
+    document.getElementById("latitude");
+
+const longitude =
+    document.getElementById("longitude");
+
+
+/*
+    GPS button
+
+    For now this will try to access
+    the browser's GPS.
+
+    Actual map integration can be
+    improved later.
+*/
+
+gpsBtn.addEventListener("click", function () {
+
+    if (!navigator.geolocation) {
+
+        locationMessage.innerHTML =
+            "❌ GPS is not supported by this browser.";
+
+        return;
+
+    }
+
+
+    locationMessage.innerHTML =
+        "📍 Getting your current location...";
+
+
+    navigator.geolocation.getCurrentPosition(
+
+        function (position) {
+
+            latitude.value =
+                position.coords.latitude;
+
+            longitude.value =
+                position.coords.longitude;
+
+
+            locationMessage.innerHTML =
+                "✅ Current location detected.<br>" +
+                "Latitude: " +
+                position.coords.latitude +
+                "<br>" +
+                "Longitude: " +
+                position.coords.longitude;
+
+        },
+
+        function () {
+
+            locationMessage.innerHTML =
+                "❌ Unable to access your location. " +
+                "Please allow location permission.";
+
+        }
+
+    );
+
+});
+
+
+/*
+    Map button
+
+    Actual interactive map will be
+    integrated in the next stage.
+*/
+
+mapBtn.addEventListener("click", function () {
+
+    locationMessage.innerHTML =
+        "🗺️ Map selection will be available here.";
+
+});
+
+</script>
+
+{% endblock %}

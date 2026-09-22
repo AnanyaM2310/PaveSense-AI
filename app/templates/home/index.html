@@ -1,0 +1,338 @@
+{% extends "layout/base.html" %}
+
+{% block title %}
+
+PaveSense AI
+
+{% endblock %}
+
+{% block content %}
+
+<section class="hero">
+
+    <div class="container text-center">
+
+        <h1>
+            🚧 PaveSense AI
+        </h1>
+
+        <p>
+            Intelligent Road Damage Detection
+            <br>
+            AI Powered Smart Complaint Management System
+        </p>
+
+        <div class="mt-5">
+
+            <a href="{{ url_for('complaint.upload') }}" 
+               class="btn btn-primary btn-lg px-4">
+
+                Upload Image
+
+            </a>
+
+            <a href="#how-it-works" class="btn btn-outline-primary btn-lg px-4 ms-3">
+               Learn More
+            </a>
+
+        </div>
+
+    </div>
+
+</section>
+
+<!-- Features -->
+
+<section class="container py-5">
+
+<h2 class="text-center mb-5">
+
+Why Choose PaveSense AI?
+
+</h2>
+
+<div class="row g-4">
+
+<div class="col-md-4">
+
+<div class="feature-card text-center">
+
+<div class="feature-icon">
+
+🛣️
+
+</div>
+
+<h4>
+
+Road Detection
+
+</h4>
+
+<p>
+
+AI detects potholes, cracks and road damage.
+
+</p>
+
+</div>
+
+</div>
+
+<div class="col-md-4">
+
+<div class="feature-card text-center">
+
+<div class="feature-icon">
+
+📍
+
+</div>
+
+<h4>
+
+GPS Location
+
+</h4>
+
+<p>
+
+Automatically detects location.
+
+</p>
+
+</div>
+
+</div>
+
+<div class="col-md-4">
+
+<div class="feature-card text-center">
+
+<div class="feature-icon">
+
+🤖
+
+</div>
+
+<h4>
+
+AI Complaint
+
+</h4>
+
+<p>
+
+Generates professional complaints.
+
+</p>
+
+</div>
+
+</div>
+
+<div class="col-md-4">
+
+<div class="feature-card text-center">
+
+<div class="feature-icon">
+
+🌍
+
+</div>
+
+<h4>
+
+Translation
+
+</h4>
+
+<p>
+
+Any language → English
+
+</p>
+
+</div>
+
+</div>
+
+<div class="col-md-4">
+
+<div class="feature-card text-center">
+
+<div class="feature-icon">
+
+📧
+
+</div>
+
+<h4>
+
+Email Tracking
+
+</h4>
+
+<p>
+
+Receive complaint updates.
+
+</p>
+
+</div>
+
+</div>
+
+<div class="col-md-4">
+
+<div class="feature-card text-center">
+
+<div class="feature-icon">
+
+🏛️
+
+</div>
+
+<h4>
+
+Government Portal
+
+</h4>
+
+<p>
+
+Smart complaint assistance.
+
+</p>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+<!-- ================= HOW IT WORKS ================= -->
+
+<section id="how-it-works" class="how-it-works py-5">
+
+    <div class="container">
+
+        <div class="text-center mb-5">
+
+            <h2>How PaveSense AI Works</h2>
+
+            <p class="section-subtitle">
+
+                From detecting road damage to generating a professional complaint in just a few steps.
+
+            </p>
+
+        </div>
+
+        <div class="row g-4">
+
+            <div class="col-lg-2 col-md-4 col-6">
+
+                <div class="step-card">
+
+                    <div class="step-number">1</div>
+
+                    <div class="step-icon">📷</div>
+
+                    <h5>Upload</h5>
+
+                    <p>Upload a road image.</p>
+
+                </div>
+
+            </div>
+
+            <div class="col-lg-2 col-md-4 col-6">
+
+                <div class="step-card">
+
+                    <div class="step-number">2</div>
+
+                    <div class="step-icon">🤖</div>
+
+                    <h5>AI Detects</h5>
+
+                    <p>Identify road damage.</p>
+
+                </div>
+
+            </div>
+
+            <div class="col-lg-2 col-md-4 col-6">
+
+                <div class="step-card">
+
+                    <div class="step-number">3</div>
+
+                    <div class="step-icon">📊</div>
+
+                    <h5>Severity</h5>
+
+                    <p>Estimate damage level.</p>
+
+                </div>
+
+            </div>
+
+            <div class="col-lg-2 col-md-4 col-6">
+
+                <div class="step-card">
+
+                    <div class="step-number">4</div>
+
+                    <div class="step-icon">📍</div>
+
+                    <h5>Location</h5>
+
+                    <p>Detect GPS location.</p>
+
+                </div>
+
+            </div>
+
+            <div class="col-lg-2 col-md-4 col-6">
+
+                <div class="step-card">
+
+                    <div class="step-number">5</div>
+
+                    <div class="step-icon">🏛️</div>
+
+                    <h5>Authority</h5>
+
+                    <p>Select responsible authority.</p>
+
+                </div>
+
+            </div>
+
+            <div class="col-lg-2 col-md-4 col-6">
+
+                <div class="step-card">
+
+                    <div class="step-number">6</div>
+
+                    <div class="step-icon">📄</div>
+
+                    <h5>Complaint</h5>
+
+                    <p>Generate & Track.</p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}

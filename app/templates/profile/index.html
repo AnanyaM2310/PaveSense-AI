@@ -1,0 +1,447 @@
+{% extends "layout/base.html" %}
+
+{% block title %}
+Profile | PaveSense AI
+{% endblock %}
+
+{% block content %}
+
+<section class="container py-5">
+
+    <div class="row justify-content-center">
+
+        <div class="col-lg-9">
+
+            <div class="feature-card">
+
+                <!-- =========================
+                     FLASH MESSAGES
+                ========================== -->
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+
+                    {% if messages %}
+
+                        {% for category, message in messages %}
+
+                            <div
+                                class="alert
+                                {% if category == 'success' %}
+                                    alert-success
+                                {% else %}
+                                    alert-danger
+                                {% endif %}
+                                alert-dismissible fade show"
+                                role="alert"
+                            >
+
+                                {{ message }}
+
+                                <button
+                                    type="button"
+                                    class="btn-close"
+                                    data-bs-dismiss="alert"
+                                    aria-label="Close"
+                                ></button>
+
+                            </div>
+
+                        {% endfor %}
+
+                    {% endif %}
+
+                {% endwith %}
+
+
+                <!-- =========================
+                     PROFILE HEADER
+                ========================== -->
+
+                <div class="text-center mb-5">
+
+                    <!-- Profile Avatar -->
+
+                    <div
+                        class="rounded-circle shadow d-flex align-items-center justify-content-center mx-auto"
+                        style="
+                            width: 180px;
+                            height: 180px;
+                            background: #4F6D7A;
+                            color: white;
+                            font-size: 60px;
+                            font-weight: 600;
+                        "
+                    >
+
+                        {{ user.name[0]|upper }}
+
+                    </div>
+
+
+                    <h2 class="mt-4">
+                        My Profile
+                    </h2>
+
+                    <p class="text-muted">
+                        Manage your PaveSense AI account
+                    </p>
+
+                </div>
+
+
+                <!-- =========================
+                     PROFILE FORM
+                ========================== -->
+
+                <form
+                    method="POST"
+                    action="{{ url_for('profile.home') }}"
+                >
+
+                    <div class="row">
+
+
+                        <!-- =========================
+                             FULL NAME
+                        ========================== -->
+
+                        <div class="col-md-6 mb-4">
+
+                            <label class="form-label">
+                                Full Name
+                            </label>
+
+                            <input
+                                type="text"
+                                name="name"
+                                class="form-control"
+                                value="{{ user.name }}"
+                                readonly
+                                required
+                            >
+
+                        </div>
+
+
+                        <!-- =========================
+                             EMAIL
+                        ========================== -->
+
+                        <div class="col-md-6 mb-4">
+
+                            <label class="form-label">
+                                Email
+                            </label>
+
+                            <input
+                                type="email"
+                                name="email"
+                                class="form-control"
+                                value="{{ user.email }}"
+                                readonly
+                                required
+                            >
+
+                        </div>
+
+
+                        <!-- =========================
+                             PHONE
+                        ========================== -->
+
+                        <div class="col-md-6 mb-4">
+
+                            <label class="form-label">
+                                Phone Number
+                            </label>
+
+                            <input
+                                type="text"
+                                name="phone"
+                                class="form-control"
+                                value="{{ user.phone or '' }}"
+                                placeholder="+91"
+                                readonly
+                                required
+                            >
+
+                        </div>
+
+
+                        <!-- =========================
+                             COUNTRY
+                        ========================== -->
+
+                        <div class="col-md-6 mb-4">
+
+                            <label class="form-label">
+                                Country
+                            </label>
+
+                            <input
+                                type="text"
+                                name="country"
+                                class="form-control"
+                                value="{{ user.country or '' }}"
+                                placeholder="Country"
+                                readonly
+                            >
+
+                        </div>
+
+
+                        <!-- =========================
+                             STATE
+                        ========================== -->
+
+                        <div class="col-md-6 mb-4">
+
+                            <label class="form-label">
+                                State
+                            </label>
+
+                            <input
+                                type="text"
+                                name="state"
+                                class="form-control"
+                                value="{{ user.state or '' }}"
+                                placeholder="State"
+                                readonly
+                            >
+
+                        </div>
+
+
+                        <!-- =========================
+                             DISTRICT
+                        ========================== -->
+
+                        <div class="col-md-6 mb-4">
+
+                            <label class="form-label">
+                                District
+                            </label>
+
+                            <input
+                                type="text"
+                                name="district"
+                                class="form-control"
+                                value="{{ user.district or '' }}"
+                                placeholder="District"
+                                readonly
+                            >
+
+                        </div>
+
+
+                        <!-- =========================
+                             ADDRESS
+                        ========================== -->
+
+                        <div class="col-md-12 mb-4">
+
+                            <label class="form-label">
+                                Address
+                            </label>
+
+                            <textarea
+                                name="address"
+                                class="form-control"
+                                rows="3"
+                                placeholder="Enter your address"
+                                readonly
+                            >{{ user.address or '' }}</textarea>
+
+                        </div>
+
+                    </div>
+
+
+                    <hr class="my-4">
+
+
+                    <!-- =========================
+                         COMPLAINT STATISTICS
+                    ========================== -->
+
+                    <h4 class="text-center mb-4">
+                        Complaint Statistics
+                    </h4>
+
+
+                    <div class="row text-center">
+
+
+                        <!-- TOTAL COMPLAINTS -->
+
+                        <div class="col-md-4">
+
+                            <h2 class="text-success">
+                                {{ total_complaints }}
+                            </h2>
+
+                            <p>
+                                Total Complaints
+                            </p>
+
+                        </div>
+
+
+                        <!-- RESOLVED -->
+
+                        <div class="col-md-4">
+
+                            <h2 class="text-primary">
+                                {{ resolved_complaints }}
+                            </h2>
+
+                            <p>
+                                Resolved
+                            </p>
+
+                        </div>
+
+
+                        <!-- PENDING -->
+
+                        <div class="col-md-4">
+
+                            <h2 class="text-warning">
+                                {{ pending_complaints }}
+                            </h2>
+
+                            <p>
+                                Pending
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <hr class="my-4">
+
+
+                    <!-- =========================
+                         BUTTONS
+                    ========================== -->
+
+                    <div class="text-center">
+
+
+                        <!-- EDIT -->
+
+                        <button
+                            type="button"
+                            id="editBtn"
+                            class="btn btn-primary px-4 me-2"
+                        >
+
+                            ✏️ Edit Profile
+
+                        </button>
+
+
+                        <!-- SAVE -->
+
+                        <button
+                            type="submit"
+                            id="saveBtn"
+                            class="btn btn-success px-4 me-2"
+                            style="display:none;"
+                        >
+
+                            💾 Save Changes
+
+                        </button>
+
+
+                        <!-- CANCEL -->
+
+                        <button
+                            type="button"
+                            id="cancelBtn"
+                            class="btn btn-secondary px-4 me-2"
+                            style="display:none;"
+                        >
+
+                            Cancel
+
+                        </button>
+
+
+                        <!-- DASHBOARD -->
+
+                        <a
+                            href="{{ url_for('dashboard.home') }}"
+                            class="btn btn-outline-dark px-4"
+                        >
+
+                            ← Dashboard
+
+                        </a>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =========================
+     EDIT PROFILE JAVASCRIPT
+========================== -->
+
+<script>
+
+const editBtn = document.getElementById("editBtn");
+const saveBtn = document.getElementById("saveBtn");
+const cancelBtn = document.getElementById("cancelBtn");
+
+
+// =========================
+// EDIT BUTTON
+// =========================
+
+editBtn.addEventListener("click", function () {
+
+    const fields = document.querySelectorAll(
+        "form input, form textarea"
+    );
+
+    fields.forEach(function (field) {
+
+        field.removeAttribute("readonly");
+
+    });
+
+
+    editBtn.style.display = "none";
+
+    saveBtn.style.display = "inline-block";
+
+    cancelBtn.style.display = "inline-block";
+
+});
+
+
+// =========================
+// CANCEL BUTTON
+// =========================
+
+cancelBtn.addEventListener("click", function () {
+
+    window.location.reload();
+
+});
+
+</script>
+
+
+{% endblock %}

@@ -1,0 +1,203 @@
+{% extends "layout/base.html" %}
+
+{% block title %}
+Applicant Details | PaveSense AI
+{% endblock %}
+
+{% block content %}
+
+<section class="container py-5">
+
+    <div class="row justify-content-center">
+
+        <div class="col-lg-8">
+
+            <!-- Progress -->
+            <div class="mb-5">
+
+                <div class="progress" style="height: 10px;">
+
+                    <div
+                        class="progress-bar bg-success"
+                        style="width: 25%;">
+                    </div>
+
+                </div>
+
+                <p class="mt-2 text-muted">
+                    Step 2 of 8 • Applicant Details
+                </p>
+
+            </div>
+
+
+            <!-- Applicant Card -->
+            <div class="feature-card">
+
+                <h2 class="text-center mb-5">
+                    👤 Applicant Details
+                </h2>
+
+
+                <!-- IMPORTANT:
+                     method="POST" sends the information
+                     to the Flask applicant route.
+                -->
+                <form
+                    action="{{ url_for('complaint.applicant') }}"
+                    method="POST"
+                >
+
+                    <!-- Full Name -->
+                    <div class="mb-4">
+
+                        <label
+                            for="applicant_name"
+                            class="form-label"
+                        >
+                            Full Name
+                        </label>
+
+                        <input
+                            type="text"
+                            id="applicant_name"
+                            name="applicant_name"
+                            class="form-control"
+                            placeholder="Enter your full name"
+                            value="{{ complaint.applicant_name or '' }}"
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- Email -->
+                    <div class="mb-4">
+
+                        <label
+                            for="email"
+                            class="form-label"
+                        >
+                            Email Address
+                        </label>
+
+                        <input
+                            type="email"
+                            id="email"
+                            name="email"
+                            class="form-control"
+                            placeholder="Enter your email address"
+                            value="{{ complaint.email or '' }}"
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- Phone -->
+                    <div class="mb-4">
+
+                        <label
+                            for="phone"
+                            class="form-label"
+                        >
+                            Phone Number
+                        </label>
+
+                        <input
+                            type="tel"
+                            id="phone"
+                            name="phone"
+                            class="form-control"
+                            placeholder="Enter your phone number"
+                            value="{{ complaint.phone or '' }}"
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- Applying For -->
+                    <div class="mb-5">
+
+                        <label
+                            for="applying_for"
+                            class="form-label"
+                        >
+                            Applying For
+                        </label>
+
+                        <select
+                            id="applying_for"
+                            name="applying_for"
+                            class="form-select"
+                            required
+                        >
+
+                            <option value="">
+                                Select an option
+                            </option>
+
+                            <option
+                                value="Self"
+                                {% if complaint.applying_for == "Self" %}
+                                    selected
+                                {% endif %}
+                            >
+                                Self
+                            </option>
+
+                            <option
+                                value="Someone Else"
+                                {% if complaint.applying_for == "Someone Else" %}
+                                    selected
+                                {% endif %}
+                            >
+                                Someone Else
+                            </option>
+
+                            <option
+                                value="Joint Petition"
+                                {% if complaint.applying_for == "Joint Petition" %}
+                                    selected
+                                {% endif %}
+                            >
+                                Joint Petition
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- Navigation Buttons -->
+                    <div class="d-flex justify-content-between">
+
+                        <a
+                            href="{{ url_for('complaint.upload') }}"
+                            class="btn btn-outline-secondary"
+                        >
+                            ← Previous
+                        </a>
+
+
+                        <button
+                            type="submit"
+                            class="btn btn-success px-5"
+                        >
+                            Next →
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}

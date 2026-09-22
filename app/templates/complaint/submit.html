@@ -1,0 +1,99 @@
+{% extends "layout/base.html" %}
+
+{% block title %}
+Submitting Complaint
+{% endblock %}
+
+{% block content %}
+
+<section class="container py-5">
+
+<div class="col-lg-8 mx-auto text-center">
+
+<div class="feature-card">
+
+<h2 class="mb-4">
+
+🚀 AI is submitting your complaint...
+
+</h2>
+
+<div class="spinner-border text-success"
+style="width:80px;height:80px;"></div>
+
+<div class="progress my-5">
+
+<div id="submitBar"
+class="progress-bar progress-bar-striped progress-bar-animated bg-success"
+style="width:0%;">
+
+</div>
+
+</div>
+
+<h5 id="status">
+
+Connecting to Government Portal...
+
+</h5>
+
+</div>
+
+</div>
+
+</section>
+
+<script>
+
+const steps = [
+
+"Connecting to Government Portal...",
+
+"Uploading Image...",
+
+"Filling Applicant Details...",
+
+"Filling Address...",
+
+"Selecting Road Authority...",
+
+"Generating Complaint...",
+
+"Submitting Complaint...",
+
+"Waiting for OTP / CAPTCHA...",
+
+"Complaint Submitted Successfully"
+
+];
+
+let i=0;
+let progress=0;
+
+let timer=setInterval(function(){
+
+progress+=12;
+
+document.getElementById("submitBar").style.width=progress+"%";
+
+if(i<steps.length){
+
+document.getElementById("status").innerHTML=steps[i];
+
+i++;
+
+}
+
+if(progress>=100){
+
+clearInterval(timer);
+
+window.location="{{ url_for('complaint.success') }}";
+
+}
+
+},1200);
+
+</script>
+
+{% endblock %}

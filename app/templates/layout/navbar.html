@@ -1,0 +1,83 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow">
+
+    <div class="container">
+
+        <!-- Logo -->
+        <a class="navbar-brand fw-bold" href="{{ url_for('dashboard.home') }}">
+            🚧 PaveSense AI
+        </a>
+
+        <!-- Mobile Toggle -->
+        <button class="navbar-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#navbarNav">
+
+            <span class="navbar-toggler-icon"></span>
+
+        </button>
+
+        <!-- Navbar Links -->
+        <div class="collapse navbar-collapse" id="navbarNav">
+
+            <ul class="navbar-nav ms-auto align-items-lg-center">
+
+                <!-- Features -->
+                <li class="nav-item">
+                    <a class="nav-link" href="#how-it-works">
+                        Features
+                    </a>
+                </li>
+
+                <!-- About -->
+                <li class="nav-item">
+                    <a class="nav-link" href="#">
+                        About
+                    </a>
+                </li>
+
+                <!-- Dashboard -->
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('dashboard.home') }}">
+                        Dashboard
+                    </a>
+                </li>
+
+                <!-- Profile -->
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('profile.home') }}">
+                        Profile
+                    </a>
+                </li>
+
+                <!-- Login -->
+                <li class="nav-item ms-lg-2">
+                    <a class="btn btn-outline-light rounded-pill px-4"
+                       href="{{ url_for('auth.login') }}">
+                        Login
+                    </a>
+                </li>
+
+                <!-- Register -->
+                <li class="nav-item ms-lg-2">
+                    <a class="btn btn-light rounded-pill px-4"
+                       href="{{ url_for('auth.register') }}">
+                        Register
+                    </a>
+                </li>
+
+                <!-- Report Road -->
+                <li class="nav-item ms-lg-2">
+                    <a class="btn btn-success rounded-pill px-4"
+                       href="{{ url_for('complaint.upload') }}">
+                        Report Road
+                    </a>
+                </li>
+
+            </ul>
+
+        </div>
+
+    </div>
+
+</nav>
