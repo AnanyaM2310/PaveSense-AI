@@ -10,100 +10,236 @@ AI Analysis | PaveSense AI
 
     <div class="col-lg-8 mx-auto">
 
-        <div class="mb-4">
-            <div
-                class="d-inline-flex align-items-center justify-content-center
-                       rounded-circle bg-success text-white"
-                style="width:80px;height:80px;font-size:40px;">
-                ✓
+        {% if analysis and analysis.requires_confirmation %}
+
+            <!-- LOW CONFIDENCE -->
+
+            <div class="mb-4">
+
+                <div
+                    class="d-inline-flex align-items-center justify-content-center
+                           rounded-circle bg-warning text-dark"
+                    style="width:80px;height:80px;font-size:40px;"
+                >
+                    !
+                </div>
+
             </div>
-        </div>
 
-        <h1>
-            AI Analysis Completed
-        </h1>
+            <h1>
+                AI Detection Needs Confirmation
+            </h1>
 
-        <p class="text-muted mt-3">
-            PaveSense AI has successfully analysed the uploaded road image.
-        </p>
+            <p class="text-muted mt-3">
 
-        <div class="alert alert-success mt-4">
+                PaveSense AI detected a possible road-damage issue,
+                but the confidence is low.
 
-            <h5 class="mb-3">
-                Road Damage Detected
-            </h5>
-
-            <p class="mb-0">
-                The AI analysis has been completed successfully.
             </p>
 
-        </div>
 
-        <div class="card shadow-sm mt-4 text-start">
+            <div class="alert alert-warning mt-4">
 
-            <div class="card-body">
-
-                <h5 class="mb-4">
-                    🤖 AI Analysis
+                <h5 class="mb-3">
+                    Possible Road Damage Detected
                 </h5>
 
-                <div class="row">
+                <p class="mb-2">
 
-                    <div class="col-md-6 mb-3">
-                        <strong>Damage Detection</strong>
-                        <br>
-                        <span class="text-success">
-                            Completed
-                        </span>
-                    </div>
+                    <strong>
+                        Damage Type:
+                    </strong>
 
-                    <div class="col-md-6 mb-3">
-                        <strong>Severity Analysis</strong>
-                        <br>
-                        <span class="text-success">
-                            Completed
-                        </span>
-                    </div>
+                    {{ analysis.damage_type }}
 
-                    <div class="col-md-6 mb-3">
-                        <strong>AI Complaint Generation</strong>
-                        <br>
-                        <span class="text-success">
-                            Ready
-                        </span>
-                    </div>
+                </p>
 
-                    <div class="col-md-6 mb-3">
-                        <strong>Image Processing</strong>
-                        <br>
-                        <span class="text-success">
-                            Completed
-                        </span>
+                <p class="mb-0">
+
+                    <strong>
+                        AI Confidence:
+                    </strong>
+
+                    {{ "%.2f"|format(analysis.confidence or 0) }}%
+
+                </p>
+
+            </div>
+
+
+            <div class="alert alert-info mt-4">
+
+                <strong>
+                    Next step:
+                </strong>
+
+                <br>
+
+                Please confirm whether the detected damage
+                is actually visible in the uploaded image.
+
+            </div>
+
+
+            <div class="mt-4">
+
+                <a
+                    href="{{ url_for('complaint.confirm_analysis') }}"
+                    class="btn btn-warning btn-lg px-5"
+                >
+                    Review AI Detection →
+                </a>
+
+            </div>
+
+
+        {% else %}
+
+            <!-- NORMAL ANALYSIS -->
+
+            <div class="mb-4">
+
+                <div
+                    class="d-inline-flex align-items-center justify-content-center
+                           rounded-circle bg-success text-white"
+                    style="width:80px;height:80px;font-size:40px;"
+                >
+                    ✓
+                </div>
+
+            </div>
+
+
+            <h1>
+                AI Analysis Completed
+            </h1>
+
+
+            <p class="text-muted mt-3">
+
+                PaveSense AI has successfully analysed
+                the uploaded road image.
+
+            </p>
+
+
+            <div class="alert alert-success mt-4">
+
+                <h5 class="mb-3">
+                    Road Damage Detected
+                </h5>
+
+                <p class="mb-0">
+
+                    The AI analysis has been completed successfully.
+
+                </p>
+
+            </div>
+
+
+            <div class="card shadow-sm mt-4 text-start">
+
+                <div class="card-body">
+
+                    <h5 class="mb-4">
+                        🤖 AI Analysis
+                    </h5>
+
+
+                    <div class="row">
+
+                        <div class="col-md-6 mb-3">
+
+                            <strong>
+                                Damage Detection
+                            </strong>
+
+                            <br>
+
+                            <span class="text-success">
+                                Completed
+                            </span>
+
+                        </div>
+
+
+                        <div class="col-md-6 mb-3">
+
+                            <strong>
+                                Severity Analysis
+                            </strong>
+
+                            <br>
+
+                            <span class="text-success">
+                                Completed
+                            </span>
+
+                        </div>
+
+
+                        <div class="col-md-6 mb-3">
+
+                            <strong>
+                                AI Complaint Generation
+                            </strong>
+
+                            <br>
+
+                            <span class="text-success">
+                                Ready
+                            </span>
+
+                        </div>
+
+
+                        <div class="col-md-6 mb-3">
+
+                            <strong>
+                                Image Processing
+                            </strong>
+
+                            <br>
+
+                            <span class="text-success">
+                                Completed
+                            </span>
+
+                        </div>
+
                     </div>
 
                 </div>
 
             </div>
 
-        </div>
 
-        <div class="alert alert-info mt-4">
+            <div class="alert alert-info mt-4">
 
-            <strong>Next step:</strong><br>
+                <strong>
+                    Next step:
+                </strong>
 
-            Review the AI-generated complaint before submitting it.
+                <br>
 
-        </div>
+                Review the AI-generated complaint before submitting it.
 
-        <div class="mt-4">
+            </div>
 
-            <a
-                href="{{ url_for('complaint.preview') }}"
-                class="btn btn-success btn-lg px-5">
-                Continue to Complaint Preview →
-            </a>
 
-        </div>
+            <div class="mt-4">
+
+                <a
+                    href="{{ url_for('complaint.preview') }}"
+                    class="btn btn-success btn-lg px-5"
+                >
+                    Continue to Complaint Preview →
+                </a>
+
+            </div>
+
+        {% endif %}
 
     </div>
 

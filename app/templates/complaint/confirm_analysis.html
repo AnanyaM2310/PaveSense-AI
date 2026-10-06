@@ -1,0 +1,367 @@
+{% extends "layout/base.html" %}
+
+{% block title %}
+Confirm AI Detection | PaveSense AI
+{% endblock %}
+
+
+{% block content %}
+
+<section class="container py-5">
+
+    <div class="col-lg-8 mx-auto">
+
+
+        <!-- ================================================= -->
+        <!-- HEADER -->
+        <!-- ================================================= -->
+
+        <div class="text-center mb-4">
+
+            <div
+                class="d-inline-flex
+                       align-items-center
+                       justify-content-center
+                       rounded-circle
+                       bg-warning
+                       text-dark"
+                style="width:80px;height:80px;font-size:38px;"
+            >
+                !
+            </div>
+
+            <h1 class="mt-4">
+                Please Confirm the AI Detection
+            </h1>
+
+            <p class="text-muted">
+
+                PaveSense AI detected a possible
+                road-damage issue, but the AI
+                confidence is low.
+
+            </p>
+
+        </div>
+
+
+        <!-- ================================================= -->
+        <!-- WARNING -->
+        <!-- ================================================= -->
+
+        <div class="alert alert-warning">
+
+            <strong>
+                Low AI Confidence
+            </strong>
+
+            <p class="mb-0 mt-2">
+
+                The AI is not completely certain about
+                this detection. Please check the uploaded
+                image before continuing.
+
+            </p>
+
+        </div>
+
+
+        <!-- ================================================= -->
+        <!-- AI RESULT -->
+        <!-- ================================================= -->
+
+        <div class="card shadow-sm mb-4">
+
+            <div class="card-body">
+
+                <h5 class="mb-4">
+                    🤖 AI Detection Result
+                </h5>
+
+
+                <div class="row">
+
+
+                    <!-- DAMAGE TYPE -->
+
+                    <div class="col-md-6 mb-3">
+
+                        <strong>
+                            Possible Damage Type
+                        </strong>
+
+                        <br>
+
+                        <span
+                            class="badge bg-primary fs-6 mt-2"
+                        >
+
+                            {{ analysis.damage_type }}
+
+                        </span>
+
+                    </div>
+
+
+                    <!-- CONFIDENCE -->
+
+                    <div class="col-md-6 mb-3">
+
+                        <strong>
+                            AI Confidence
+                        </strong>
+
+                        <br>
+
+                        <span
+                            class="badge
+                                   bg-warning
+                                   text-dark
+                                   fs-6
+                                   mt-2"
+                        >
+
+                            {{ "%.2f"|format(
+                                analysis.confidence or 0
+                            ) }}%
+
+                        </span>
+
+                    </div>
+
+
+                    <!-- SEVERITY -->
+
+                    <div class="col-md-6 mb-3">
+
+                        <strong>
+                            Initial Severity
+                        </strong>
+
+                        <br>
+
+                        <span
+                            class="badge
+                                   bg-secondary
+                                   fs-6
+                                   mt-2"
+                        >
+
+                            {{ analysis.severity }}
+
+                        </span>
+
+                    </div>
+
+
+                    <!-- DETECTION COUNT -->
+
+                    <div class="col-md-6 mb-3">
+
+                        <strong>
+                            Detection Count
+                        </strong>
+
+                        <br>
+
+                        <span
+                            class="mt-2
+                                   d-inline-block"
+                        >
+
+                            {{ analysis.detection_count }}
+
+                        </span>
+
+                    </div>
+
+
+                    <!-- AREA -->
+
+                    <div class="col-md-6 mb-3">
+
+                        <strong>
+                            Detected Area
+                        </strong>
+
+                        <br>
+
+                        <span
+                            class="mt-2
+                                   d-inline-block"
+                        >
+
+                            {{ "%.2f"|format(
+                                analysis.area_ratio or 0
+                            ) }}%
+
+                        </span>
+
+                    </div>
+
+
+                    <!-- DETECTION SOURCE -->
+
+                    {% if analysis.detection_source %}
+
+                    <div class="col-md-6 mb-3">
+
+                        <strong>
+                            Detection Source
+                        </strong>
+
+                        <br>
+
+                        <span
+                            class="badge
+                                   bg-info
+                                   text-dark
+                                   mt-2"
+                        >
+
+                            {{ analysis.detection_source
+                               |replace("_", " ")
+                               |title }}
+
+                        </span>
+
+                    </div>
+
+                    {% endif %}
+
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- ================================================= -->
+        <!-- IMAGE -->
+        <!-- ================================================= -->
+
+        {% if complaint.image_path %}
+
+        <div class="card shadow-sm mb-4">
+
+            <div class="card-body">
+
+                <h5 class="mb-3">
+                    📷 Uploaded Road Image
+                </h5>
+
+                <div class="text-center">
+
+                    <img
+                        src="{{ url_for(
+                            'static',
+                            filename='uploads/' + complaint.image_path
+                        ) }}"
+                        class="img-fluid rounded"
+                        style="max-height:450px;"
+                        alt="Uploaded road image"
+                    >
+
+                </div>
+
+            </div>
+
+        </div>
+
+        {% endif %}
+
+
+        <!-- ================================================= -->
+        <!-- USER CONFIRMATION -->
+        <!-- ================================================= -->
+
+        <div class="card shadow-sm">
+
+            <div class="card-body text-center">
+
+                <h5>
+
+                    Is the detected road damage
+                    actually visible in this image?
+
+                </h5>
+
+
+                <p class="text-muted mt-2">
+
+                    If yes, PaveSense AI will continue
+                    to the complaint preview.
+
+                    If no, you can upload another image.
+
+                </p>
+
+
+                <!-- ================================================= -->
+                <!-- CONFIRMATION FORM -->
+                <!-- ================================================= -->
+
+                <form
+                    method="POST"
+                    action="{{ url_for(
+                        'complaint.confirm_analysis'
+                    ) }}"
+                >
+
+                    <div
+                        class="d-flex
+                               justify-content-center
+                               gap-3
+                               mt-4"
+                    >
+
+
+                        <!-- YES -->
+
+                        <button
+                            type="submit"
+                            name="confirm_detection"
+                            value="yes"
+                            class="btn
+                                   btn-success
+                                   btn-lg
+                                   px-4"
+                        >
+
+                            ✓ Yes, Continue
+
+                        </button>
+
+
+                        <!-- NO -->
+
+                        <button
+                            type="submit"
+                            name="confirm_detection"
+                            value="no"
+                            class="btn
+                                   btn-outline-danger
+                                   btn-lg
+                                   px-4"
+                        >
+
+                            ✕ No, Try Again
+
+                        </button>
+
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+
+    </div>
+
+</section>
+
+{% endblock %}

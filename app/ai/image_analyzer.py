@@ -1,416 +1,992 @@
 import os
-
 from ultralytics import YOLO
 
 
-# =========================================================
-# MODEL CONFIGURATION
-# =========================================================
+# ============================================================
+# PAVESENSE AI - IMAGE ANALYZER
+# ============================================================
+#
+# Primary model:
+#   weights/best.pt
+#
+# Fallback model:
+#   weights/yolo12s_RDD2022_best.pt
+#
+# The primary model is used first.
+#
+# If:
+#   1. No damage is detected, OR
+#   2. Primary model predicts "Other"
+#
+# then the fallback RDD2022 model is used.
+#
+# Low-confidence detections are NOT automatically treated
+# as highly severe. They require user confirmation.
+# ============================================================
 
-MODEL_PATH = os.path.join(
-    os.path.dirname(
-        os.path.dirname(
-            os.path.dirname(__file__)
-        )
-    ),
+
+# ------------------------------------------------------------
+# PROJECT ROOT
+# ------------------------------------------------------------
+
+BASE_DIR = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..", "..")
+)
+
+
+# ------------------------------------------------------------
+# MODEL PATHS
+# ------------------------------------------------------------
+
+PRIMARY_MODEL_PATH = os.path.join(
+    BASE_DIR,
+    "weights",
+    "best.pt"
+)
+
+FALLBACK_MODEL_PATH = os.path.join(
+    BASE_DIR,
     "weights",
     "yolo12s_RDD2022_best.pt"
 )
 
-# The model will be downloaded automatically by Ultralytics
-# the first time it is used.
+
+# ------------------------------------------------------------
+# CONFIDENCE SETTINGS
+# ------------------------------------------------------------
+
+# Normal detection threshold
+PRIMARY_CONFIDENCE = 0.40
+
+# Lower threshold for fallback detection
+FALLBACK_CONFIDENCE = 0.10
+
+# Anything below this confidence is considered uncertain
+LOW_CONFIDENCE_THRESHOLD = 0.30
 
 
-# =========================================================
-# DAMAGE LABELS
-# =========================================================
+# ------------------------------------------------------------
+# MODEL CACHE
+# ------------------------------------------------------------
 
-DAMAGE_LABELS = {
-    "d00": "Longitudinal Crack",
-    "d10": "Transverse Crack",
-    "d20": "Alligator Crack",
-    "d40": "Pothole",
-    "repair": "Repair"
-}
+_primary_model = None
+_fallback_model = None
 
 
-# =========================================================
-# LOAD MODEL
-# =========================================================
+# ============================================================
+# PRIMARY MODEL LOADER
+# ============================================================
 
-_model = None
+def load_primary_model():
+    """
+    Load the main PaveSense road-damage model.
 
+    The model is loaded only once and then reused.
+    """
 
-def get_model():
+    global _primary_model
 
-    global _model
-
-    if _model is None:
+    if _primary_model is None:
 
         print("Loading PaveSense road damage model...")
 
-        _model = YOLO(
-            MODEL_PATH
-        )
+        if not os.path.exists(PRIMARY_MODEL_PATH):
+            raise FileNotFoundError(
+                f"Primary model not found:\n{PRIMARY_MODEL_PATH}"
+            )
+
+        _primary_model = YOLO(PRIMARY_MODEL_PATH)
 
         print("PaveSense road damage model loaded.")
 
-    return _model
+    return _primary_model
 
-# =========================================================
+
+# ============================================================
+# FALLBACK MODEL LOADER
+# ============================================================
+
+def load_fallback_model():
+    """
+    Load the RDD2022 fallback model.
+
+    The fallback model is used when:
+        - primary model detects nothing
+        - primary model predicts 'Other'
+    """
+
+    global _fallback_model
+
+    if _fallback_model is None:
+
+        print("Loading fallback road damage model...")
+
+        if not os.path.exists(FALLBACK_MODEL_PATH):
+            raise FileNotFoundError(
+                f"Fallback model not found:\n{FALLBACK_MODEL_PATH}"
+            )
+
+        _fallback_model = YOLO(FALLBACK_MODEL_PATH)
+
+        print("Fallback road damage model loaded.")
+
+    return _fallback_model
+
+
+# ============================================================
+# CLASS NAME NORMALIZATION
+# ============================================================
+
+def normalize_damage_type(class_name):
+    """
+    Convert model-specific class names into PaveSense names.
+
+    Primary model:
+        Longitudinal Crack
+        Transverse Crack
+        Alligator Crack
+        Pothole
+        Other
+
+    RDD2022 fallback model:
+        D00
+        D10
+        D20
+        D40
+        Repair
+    """
+
+    if class_name is None:
+        return "Other"
+
+    name = str(class_name).strip()
+
+    # --------------------------------------------------------
+    # RDD2022 CLASS MAPPING
+    # --------------------------------------------------------
+
+    fallback_mapping = {
+        "D00": "Longitudinal Crack",
+        "D10": "Transverse Crack",
+        "D20": "Alligator Crack",
+        "D40": "Pothole",
+        "Repair": "Other",
+    }
+
+    if name in fallback_mapping:
+        return fallback_mapping[name]
+
+    # --------------------------------------------------------
+    # NORMALIZE COMMON PRIMARY MODEL NAMES
+    # --------------------------------------------------------
+
+    normalized = name.lower()
+
+    if normalized in [
+        "longitudinal crack",
+        "longitudinal_crack",
+        "longitudinal",
+    ]:
+        return "Longitudinal Crack"
+
+    if normalized in [
+        "transverse crack",
+        "transverse_crack",
+        "transverse",
+    ]:
+        return "Transverse Crack"
+
+    if normalized in [
+        "alligator crack",
+        "alligator_crack",
+        "alligator",
+    ]:
+        return "Alligator Crack"
+
+    if normalized in [
+        "pothole",
+        "potholes",
+        "pot hole",
+    ]:
+        return "Pothole"
+
+    if normalized in [
+        "other",
+        "repair",
+    ]:
+        return "Other"
+
+    # If the model gives something unknown,
+    # don't expose the raw model class to the application.
+    return "Other"
+
+
+# ============================================================
 # SEVERITY CALCULATION
-# =========================================================
+# ============================================================
 
-def calculate_severity(
-    damage_type,
-    confidence,
-    area_ratio,
-    detection_count
-):
-
+def calculate_severity(confidence, area_ratio):
     """
-    Calculates an initial severity estimate.
+    Estimate road-damage severity.
 
-    This is a rule-based severity layer on top of
-    the object detector.
+    IMPORTANT:
+    Confidence is checked FIRST.
 
-    It is NOT a medically/safety-certified severity
-    prediction.
+    A very low-confidence AI prediction must not automatically
+    become HIGH severity simply because of another calculation.
+
+    Rules:
+
+        Confidence < 30%
+            -> LOW
+
+        Confidence >= 30% and area < 5%
+            -> LOW
+
+        Confidence >= 30% and area 5% to <15%
+            -> MEDIUM
+
+        Confidence >= 30% and area >=15%
+            -> HIGH
     """
 
-    damage_type_lower = damage_type.lower()
+    # Convert NumPy values safely into normal Python floats.
+    try:
+        confidence = float(confidence)
+    except (TypeError, ValueError):
+        confidence = 0.0
 
-    # -----------------------------------------------------
-    # HIGH SEVERITY
-    # -----------------------------------------------------
+    try:
+        area_ratio = float(area_ratio)
+    except (TypeError, ValueError):
+        area_ratio = 0.0
 
-    if (
+    # --------------------------------------------------------
+    # LOW CONFIDENCE ALWAYS MEANS LOW INITIAL SEVERITY
+    # --------------------------------------------------------
 
-        area_ratio >= 0.20
+    if confidence < (LOW_CONFIDENCE_THRESHOLD * 100):
+        return "LOW"
 
-        or detection_count >= 4
+    # --------------------------------------------------------
+    # HIGH-CONFIDENCE DETECTION
+    # --------------------------------------------------------
 
-        or (
-            damage_type_lower == "pothole"
-            and area_ratio >= 0.10
-        )
-
-        or (
-            damage_type_lower == "alligator crack"
-            and area_ratio >= 0.12
-        )
-
-    ):
-
+    if area_ratio >= 15.0:
         return "HIGH"
 
-
-    # -----------------------------------------------------
-    # MEDIUM SEVERITY
-    # -----------------------------------------------------
-
-    if (
-
-        area_ratio >= 0.05
-
-        or detection_count >= 2
-
-        or confidence >= 0.70
-
-    ):
-
+    if area_ratio >= 5.0:
         return "MEDIUM"
-
-
-    # -----------------------------------------------------
-    # LOW SEVERITY
-    # -----------------------------------------------------
 
     return "LOW"
 
 
-# =========================================================
-# IMAGE ANALYSIS
-# =========================================================
+# ============================================================
+# BOUNDING BOX AREA CALCULATION
+# ============================================================
 
-def analyze_image(image_path):
-
+def calculate_bbox_area_ratio(box, image_width, image_height):
     """
-    Runs road-damage detection on one uploaded image.
+    Calculate how much of the image is occupied by the
+    detected bounding box.
 
-    Returns a dictionary containing:
-
-        damage_type
-        confidence
-        severity
-        detection_count
-        area_ratio
+    Returns percentage.
     """
 
-    if not image_path:
+    try:
 
+        x1, y1, x2, y2 = box.xyxy[0].tolist()
+
+        box_width = max(0.0, float(x2) - float(x1))
+        box_height = max(0.0, float(y2) - float(y1))
+
+        bbox_area = box_width * box_height
+
+        image_area = float(image_width * image_height)
+
+        if image_area <= 0:
+            return 0.0
+
+        ratio = (bbox_area / image_area) * 100.0
+
+        return round(float(ratio), 2)
+
+    except Exception:
+        return 0.0
+
+
+# ============================================================
+# PROCESS YOLO RESULT
+# ============================================================
+
+def process_result(
+    result,
+    model,
+    image_width,
+    image_height
+):
+    """
+    Convert an Ultralytics YOLO result into a PaveSense
+    detection list.
+
+    Returns:
+
+        {
+            "detections": [...],
+            "best_detection": {...} or None
+        }
+    """
+
+    detections = []
+
+    # No boxes
+    if result is None:
         return {
-            "success": False,
-            "damage_type": None,
-            "confidence": None,
-            "severity": None,
-            "detection_count": 0,
-            "area_ratio": 0,
-            "message": "No image was provided."
+            "detections": [],
+            "best_detection": None
         }
 
+    if result.boxes is None:
+        return {
+            "detections": [],
+            "best_detection": None
+        }
+
+    if len(result.boxes) == 0:
+        return {
+            "detections": [],
+            "best_detection": None
+        }
+
+    # --------------------------------------------------------
+    # PROCESS EVERY DETECTION
+    # --------------------------------------------------------
+
+    for box in result.boxes:
+
+        # -----------------------------
+        # CLASS ID
+        # -----------------------------
+
+        try:
+            class_id = int(box.cls[0].item())
+        except Exception:
+            continue
+
+        # -----------------------------
+        # CONFIDENCE
+        # -----------------------------
+
+        try:
+            confidence = float(box.conf[0].item())
+        except Exception:
+            confidence = 0.0
+
+        confidence_percent = round(
+            confidence * 100.0,
+            2
+        )
+
+        # -----------------------------
+        # MODEL CLASS NAME
+        # -----------------------------
+
+        try:
+            raw_class_name = model.names[class_id]
+        except Exception:
+            raw_class_name = "Other"
+
+        # -----------------------------
+        # PAVESENSE DAMAGE TYPE
+        # -----------------------------
+
+        damage_type = normalize_damage_type(
+            raw_class_name
+        )
+
+        # -----------------------------
+        # BOUNDING BOX AREA
+        # -----------------------------
+
+        bbox_area_ratio = calculate_bbox_area_ratio(
+            box,
+            image_width,
+            image_height
+        )
+
+        # For this project, detected area is represented
+        # by the bounding-box area.
+        area_ratio = bbox_area_ratio
+
+        detection = {
+            "damage_type": damage_type,
+            "confidence": confidence_percent,
+            "area_ratio": area_ratio,
+            "bbox_area_ratio": bbox_area_ratio
+        }
+
+        detections.append(detection)
+
+    # --------------------------------------------------------
+    # NO VALID DETECTIONS
+    # --------------------------------------------------------
+
+    if not detections:
+
+        return {
+            "detections": [],
+            "best_detection": None
+        }
+
+    # --------------------------------------------------------
+    # BEST DETECTION
+    #
+    # Select the detection with the highest confidence.
+    # --------------------------------------------------------
+
+    best_detection = max(
+        detections,
+        key=lambda item: item["confidence"]
+    )
+
+    return {
+        "detections": detections,
+        "best_detection": best_detection
+    }
+
+
+# ============================================================
+# RUN MODEL
+# ============================================================
+
+def run_model(
+    model,
+    image_path,
+    confidence_threshold
+):
+    """
+    Run a YOLO model and return processed detection data.
+    """
+
+    results = model.predict(
+        source=image_path,
+        conf=confidence_threshold,
+        verbose=False
+    )
+
+    if not results:
+        return {
+            "detections": [],
+            "best_detection": None
+        }
+
+    result = results[0]
+
+    # --------------------------------------------------------
+    # GET IMAGE SIZE FROM YOLO RESULT
+    # --------------------------------------------------------
+
+    image_height = 0
+    image_width = 0
+
+    try:
+
+        if result.orig_img is not None:
+
+            image_height = int(
+                result.orig_img.shape[0]
+            )
+
+            image_width = int(
+                result.orig_img.shape[1]
+            )
+
+    except Exception:
+        pass
+
+    # --------------------------------------------------------
+    # SAFETY FALLBACK
+    # --------------------------------------------------------
+
+    if image_width <= 0:
+        image_width = 1
+
+    if image_height <= 0:
+        image_height = 1
+
+    return process_result(
+        result,
+        model,
+        image_width,
+        image_height
+    )
+
+
+# ============================================================
+# FALLBACK ANALYSIS
+# ============================================================
+
+def run_fallback_analysis(image_path):
+    """
+    Run the RDD2022 fallback model.
+
+    The fallback model is useful when the primary model
+    produces 'Other' or no detection.
+    """
+
+    print("Running fallback analysis...")
+
+    fallback_model = load_fallback_model()
+
+    fallback_result = run_model(
+        fallback_model,
+        image_path,
+        FALLBACK_CONFIDENCE
+    )
+
+    detections = fallback_result["detections"]
+    best_detection = fallback_result["best_detection"]
+
+    # --------------------------------------------------------
+    # NO FALLBACK DETECTION
+    # --------------------------------------------------------
+
+    if best_detection is None:
+
+        print("Fallback model also found no road damage.")
+
+        return None
+
+    # --------------------------------------------------------
+    # BEST FALLBACK DETECTION
+    # --------------------------------------------------------
+
+    damage_type = best_detection["damage_type"]
+
+    confidence = float(
+        best_detection["confidence"]
+    )
+
+    area_ratio = float(
+        best_detection["area_ratio"]
+    )
+
+    bbox_area_ratio = float(
+        best_detection["bbox_area_ratio"]
+    )
+
+    detection_count = len(detections)
+
+    # --------------------------------------------------------
+    # SEVERITY
+    # --------------------------------------------------------
+
+    severity = calculate_severity(
+        confidence,
+        area_ratio
+    )
+
+    # --------------------------------------------------------
+    # LOW CONFIDENCE
+    # --------------------------------------------------------
+
+    low_confidence = (
+        confidence < (LOW_CONFIDENCE_THRESHOLD * 100)
+    )
+
+    requires_confirmation = low_confidence
+
+    # --------------------------------------------------------
+    # PRINT RESULT
+    # --------------------------------------------------------
+
+    print()
+    print("========== FALLBACK DETECTION ==========")
+    print(
+        f"Possible Damage Type: {damage_type}"
+    )
+    print(
+        f"YOLO Confidence: {confidence} %"
+    )
+    print(
+        f"Area Ratio: {area_ratio} %"
+    )
+    print(
+        f"Bounding Box Ratio: {bbox_area_ratio} %"
+    )
+    print(
+        f"Detection Count: {detection_count}"
+    )
+    print(
+        f"Initial Severity: {severity}"
+    )
+    print(
+        "Detection Source: FALLBACK"
+    )
+
+    if requires_confirmation:
+
+        print(
+            "User confirmation required."
+        )
+
+    else:
+
+        print(
+            "Fallback confidence is sufficient."
+        )
+
+    print(
+        "========================================"
+    )
+
+    return {
+        "success": True,
+        "damage_type": damage_type,
+        "confidence": confidence,
+        "severity": severity,
+        "detection_count": detection_count,
+        "area_ratio": area_ratio,
+        "bbox_area_ratio": bbox_area_ratio,
+        "detections": detections,
+        "low_confidence": low_confidence,
+        "requires_confirmation": requires_confirmation,
+        "detection_source": "fallback",
+        "message": (
+            "A possible road-damage issue was detected "
+            "with low AI confidence. Please verify the "
+            "image before continuing with the complaint."
+            if requires_confirmation
+            else
+            "Road damage successfully analyzed."
+        )
+    }
+
+
+# ============================================================
+# MAIN ANALYSIS FUNCTION
+# ============================================================
+
+def analyze_image(image_path):
+    """
+    Main PaveSense image-analysis function.
+
+    Workflow:
+
+        1. Validate image.
+        2. Run primary model.
+        3. If primary detects a useful damage type,
+           use primary result.
+        4. If primary says 'Other', run fallback.
+        5. If primary finds nothing, run fallback.
+        6. Calculate severity.
+        7. Return structured result.
+    """
+
+    print()
+    print("========== PAVESENSE AI ANALYSIS ==========")
+    print("Running normal YOLO analysis...")
+
+    # --------------------------------------------------------
+    # IMAGE VALIDATION
+    # --------------------------------------------------------
+
+    if not image_path:
+        return {
+            "success": False,
+            "message": "No image path was provided."
+        }
 
     if not os.path.exists(image_path):
 
         return {
             "success": False,
-            "damage_type": None,
-            "confidence": None,
-            "severity": None,
-            "detection_count": 0,
-            "area_ratio": 0,
-            "message": "Image file was not found."
+            "message": (
+                f"Image not found: {image_path}"
+            )
         }
-
 
     try:
 
-        model = get_model()
+        # ====================================================
+        # PRIMARY MODEL
+        # ====================================================
 
+        primary_model = load_primary_model()
 
-        # -------------------------------------------------
-        # RUN DETECTION
-        # -------------------------------------------------
-
-        results = model.predict(
-            source=image_path,
-            conf=0.40,
-            imgsz=640,
-            device="cpu",
-            verbose=False
+        primary_result = run_model(
+            primary_model,
+            image_path,
+            PRIMARY_CONFIDENCE
         )
 
-
-        if not results:
-
-            return {
-                "success": False,
-                "damage_type": None,
-                "confidence": None,
-                "severity": None,
-                "detection_count": 0,
-                "area_ratio": 0,
-                "message": "No analysis result was returned."
-            }
-
-
-        result = results[0]
-
-
-        # -------------------------------------------------
-        # IMAGE SIZE
-        # -------------------------------------------------
-
-        image_height = result.orig_shape[0]
-        image_width = result.orig_shape[1]
-
-        image_area = (
-            image_width * image_height
+        primary_detections = (
+            primary_result["detections"]
         )
 
+        primary_best = (
+            primary_result["best_detection"]
+        )
 
-        # -------------------------------------------------
-        # NO DAMAGE DETECTED
-        # -------------------------------------------------
+        # ====================================================
+        # PRIMARY MODEL FOUND NOTHING
+        # ====================================================
 
-        if result.boxes is None or len(result.boxes) == 0:
+        if primary_best is None:
 
-            return {
-                "success": True,
-                "damage_type": "No road damage detected",
-                "confidence": 0,
-                "severity": "LOW",
-                "detection_count": 0,
-                "area_ratio": 0,
-                "message": (
-                    "The AI model did not detect "
-                    "a supported road-damage category."
-                )
-            }
-
-
-        # -------------------------------------------------
-        # PROCESS DETECTIONS
-        # -------------------------------------------------
-
-        detections = []
-
-
-        for box in result.boxes:
-
-            class_id = int(
-                box.cls[0]
+            print(
+                "No damage detected at normal confidence threshold (0.4)."
             )
 
-            confidence = float(
-                box.conf[0]
+            print(
+                "Running fallback analysis..."
             )
 
-            coordinates = box.xyxy[0].tolist()
-
-            x1, y1, x2, y2 = coordinates
-
-
-            box_width = max(
-                0,
-                x2 - x1
+            fallback_result = run_fallback_analysis(
+                image_path
             )
 
-            box_height = max(
-                0,
-                y2 - y1
-            )
+            # ------------------------------------------------
+            # FALLBACK ALSO FOUND NOTHING
+            # ------------------------------------------------
 
-            box_area = (
-                box_width * box_height
-            )
+            if fallback_result is None:
 
-
-            area_ratio = (
-                box_area / image_area
-                if image_area > 0
-                else 0
-            )
-
-
-            raw_name = model.names.get(
-                class_id,
-                "Unknown"
-            )
-
-
-            damage_name = DAMAGE_LABELS.get(
-                raw_name.lower(),
-                raw_name
-            )
-
-
-            detections.append({
-
-                "damage_type": damage_name,
-
-                "confidence": round(
-                    confidence * 100,
-                    2
-                ),
-
-                "area_ratio": round(
-                    area_ratio * 100,
-                    2
+                print(
+                    "No road damage detected."
                 )
 
-            })
+                print(
+                    "============================================"
+                )
 
+                return {
+                    "success": False,
+                    "damage_type": None,
+                    "confidence": 0.0,
+                    "severity": "LOW",
+                    "detection_count": 0,
+                    "area_ratio": 0.0,
+                    "bbox_area_ratio": 0.0,
+                    "detections": [],
+                    "low_confidence": False,
+                    "requires_confirmation": False,
+                    "detection_source": "none",
+                    "message": (
+                        "No road damage was detected "
+                        "in the uploaded image."
+                    )
+                }
 
-        # -------------------------------------------------
-        # SELECT PRIMARY DAMAGE
-        # -------------------------------------------------
+            print(
+                "============================================"
+            )
 
-        detections.sort(
-            key=lambda x: x["confidence"],
-            reverse=True
+            return fallback_result
+
+        # ====================================================
+        # PRIMARY MODEL FOUND SOMETHING
+        # ====================================================
+
+        primary_damage_type = (
+            primary_best["damage_type"]
         )
 
+        # ====================================================
+        # PRIMARY MODEL SAYS OTHER
+        #
+        # This is the important part for your pothole
+        # images.
+        # ====================================================
 
-        primary = detections[0]
+        if primary_damage_type == "Other":
 
-        damage_type = primary[
-            "damage_type"
-        ]
+            print(
+                "Primary model classified the damage as OTHER."
+            )
 
-        # Convert percentage values back to 0–1
-        # for severity calculation
-        confidence = primary[
-            "confidence"
-        ] / 100
+            print(
+                "Running fallback model to verify the damage type..."
+            )
 
-        area_ratio = primary[
-            "area_ratio"
-        ] / 100
+            fallback_result = run_fallback_analysis(
+                image_path
+            )
+
+            # ------------------------------------------------
+            # FALLBACK FOUND A MORE USEFUL CLASS
+            # ------------------------------------------------
+
+            if (
+                fallback_result is not None
+                and fallback_result["damage_type"] != "Other"
+            ):
+
+                print(
+                    "Fallback classification is more useful "
+                    f"than PRIMARY = Other."
+                )
+
+                print(
+                    "============================================"
+                )
+
+                return fallback_result
+
+            # ------------------------------------------------
+            # FALLBACK DID NOT GIVE A BETTER RESULT
+            # ------------------------------------------------
+
+            print(
+                "Fallback did not provide a better "
+                "damage classification."
+            )
+
+        # ====================================================
+        # USE PRIMARY MODEL RESULT
+        # ====================================================
+
+        damage_type = primary_best["damage_type"]
+
+        confidence = float(
+            primary_best["confidence"]
+        )
+
+        area_ratio = float(
+            primary_best["area_ratio"]
+        )
+
+        bbox_area_ratio = float(
+            primary_best["bbox_area_ratio"]
+        )
 
         detection_count = len(
-            detections
+            primary_detections
         )
 
-
-        # -------------------------------------------------
-        # CALCULATE SEVERITY
-        # -------------------------------------------------
+        # ----------------------------------------------------
+        # SEVERITY
+        # ----------------------------------------------------
 
         severity = calculate_severity(
-
-            damage_type,
-
             confidence,
-
-            area_ratio,
-
-            detection_count
-
+            area_ratio
         )
 
+        # ----------------------------------------------------
+        # PRIMARY DETECTIONS ARE NORMALLY HIGH CONFIDENCE
+        # because the primary threshold is 40%.
+        # ----------------------------------------------------
+
+        low_confidence = (
+            confidence < (LOW_CONFIDENCE_THRESHOLD * 100)
+        )
+
+        requires_confirmation = low_confidence
+
+        # ----------------------------------------------------
+        # PRINT RESULT
+        # ----------------------------------------------------
+
+        print(
+            f"Damage Type: {damage_type}"
+        )
+
+        print(
+            f"YOLO Confidence: {confidence} %"
+        )
+
+        print(
+            f"Area Ratio: {area_ratio} %"
+        )
+
+        print(
+            f"Bounding Box Ratio: {bbox_area_ratio} %"
+        )
+
+        print(
+            f"Detection Count: {detection_count}"
+        )
+
+        print(
+            f"Severity: {severity}"
+        )
+
+        print(
+            "Detection Source: NORMAL"
+        )
+
+        print(
+            "============================================"
+        )
 
         return {
-
             "success": True,
-
             "damage_type": damage_type,
-
-            "confidence": round(
-                confidence * 100,
-                2
-            ),
-
+            "confidence": confidence,
             "severity": severity,
-
             "detection_count": detection_count,
-
-            "area_ratio": round(
-                area_ratio * 100,
-                2
-            ),
-
-            "detections": detections,
-
+            "area_ratio": area_ratio,
+            "bbox_area_ratio": bbox_area_ratio,
+            "detections": primary_detections,
+            "low_confidence": low_confidence,
+            "requires_confirmation": requires_confirmation,
+            "detection_source": "normal",
             "message": (
+                "A possible road-damage issue was detected "
+                "with low AI confidence. Please verify the "
+                "image before continuing with the complaint."
+                if requires_confirmation
+                else
                 "Road damage successfully analyzed."
             )
-
         }
 
+    # ========================================================
+    # ERROR HANDLING
+    # ========================================================
 
     except Exception as e:
 
+        print()
+        print("========== PAVESENSE AI ERROR ==========")
         print(
-            "AI IMAGE ANALYSIS ERROR:",
-            e
+            f"Error while analyzing image: {e}"
+        )
+        print(
+            "========================================"
         )
 
-
         return {
-
             "success": False,
-
             "damage_type": None,
-
-            "confidence": None,
-
-            "severity": None,
-
+            "confidence": 0.0,
+            "severity": "LOW",
             "detection_count": 0,
-
-            "area_ratio": 0,
-
-            "message": str(e)
-
+            "area_ratio": 0.0,
+            "bbox_area_ratio": 0.0,
+            "detections": [],
+            "low_confidence": False,
+            "requires_confirmation": False,
+            "detection_source": "error",
+            "message": (
+                "An error occurred while analyzing "
+                f"the image: {str(e)}"
+            )
         }
+
+
+# ============================================================
+# OPTIONAL DIRECT TEST
+# ============================================================
+
+if __name__ == "__main__":
+
+    print()
+    print("PaveSense Image Analyzer")
+    print("-------------------------")
+    print()
+    print(
+        "This module is normally called through "
+        "analyze_image(image_path)."
+    )

@@ -6,269 +6,915 @@ Incident Details | PaveSense AI
 
 {% block content %}
 
+<!-- =========================================================
+     LEAFLET CSS
+     ========================================================= -->
+
+<link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+/>
+
+
 <section class="container py-5">
 
-    <div class="row justify-content-center">
+    <!-- =====================================================
+         PAGE HEADER
+         ===================================================== -->
 
-        <div class="col-lg-8">
+    <div class="text-center mb-5">
 
-            <!-- Progress -->
+        <h1>
+            Incident Details
+        </h1>
 
-            <div class="progress mb-3" style="height: 10px;">
+        <p class="text-muted">
+            Provide the date, time and location of the detected road damage.
+        </p>
 
-                <div
-                    class="progress-bar bg-success"
-                    style="width: 62.5%;">
+    </div>
+
+
+    <!-- =====================================================
+         INCIDENT FORM
+         ===================================================== -->
+
+    <form
+        method="POST"
+        action="{{ url_for('complaint.incident') }}"
+        id="incidentForm"
+    >
+
+        <!-- =================================================
+             DATE & TIME
+             ================================================= -->
+
+        <div class="feature-card mb-4">
+
+            <h3 class="mb-4">
+                📅 Incident Information
+            </h3>
+
+
+            <div class="row">
+
+                <!-- DATE -->
+
+                <div class="col-md-6 mb-3">
+
+                    <label
+                        for="incident_date"
+                        class="form-label"
+                    >
+                        Incident Date
+                    </label>
+
+                    <input
+                        type="date"
+                        id="incident_date"
+                        name="incident_date"
+                        class="form-control"
+                        value="{% if complaint.incident_date %}{{ complaint.incident_date.strftime('%Y-%m-%d') }}{% endif %}"
+                    >
+
                 </div>
 
-            </div>
 
-            <p class="text-muted mb-4">
-                Step 5 of 8 • Incident Details
-            </p>
+                <!-- TIME -->
 
+                <div class="col-md-6 mb-3">
 
-            <div class="feature-card">
-
-                <h2 class="text-center mb-5">
-                    📍 Incident Details
-                </h2>
-
-
-                <form
-                    action="{{ url_for('complaint.incident') }}"
-                    method="POST"
-                >
-
-
-                    <!-- INCIDENT DATE -->
-
-                    <div class="mb-4">
-
-                        <label
-                            for="incidentDate"
-                            class="form-label"
-                        >
-                            Date of Incident
-                        </label>
-
-                        <input
-                            type="date"
-                            id="incidentDate"
-                            name="incident_date"
-                            class="form-control"
-                            required
-                        >
-
-                    </div>
-
-
-                    <!-- INCIDENT TIME -->
-
-                    <div class="mb-4">
-
-                        <label
-                            for="incidentTime"
-                            class="form-label"
-                        >
-                            Approximate Time of Incident
-                        </label>
-
-                        <input
-                            type="time"
-                            id="incidentTime"
-                            name="incident_time"
-                            class="form-control"
-                            required
-                        >
-
-                    </div>
-
-
-                    <!-- LOCATION -->
-
-                    <div class="mb-4">
-
-                        <label class="form-label">
-                            Incident Location
-                        </label>
-
-                        <div class="d-grid gap-2">
-
-                            <button
-                                type="button"
-                                id="gpsBtn"
-                                class="btn btn-outline-success"
-                            >
-                                📍 Use Current GPS Location
-                            </button>
-
-
-                            <button
-                                type="button"
-                                id="mapBtn"
-                                class="btn btn-outline-primary"
-                            >
-                                🗺️ Select Location on Map
-                            </button>
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- LOCATION STATUS -->
-
-                    <div
-                        id="locationMessage"
-                        class="alert alert-light border text-center"
+                    <label
+                        for="incident_time"
+                        class="form-label"
                     >
-
-                        Location has not been selected yet.
-
-                    </div>
-
-
-                    <!-- LATITUDE -->
+                        Incident Time
+                    </label>
 
                     <input
-                        type="hidden"
-                        id="latitude"
-                        name="latitude"
+                        type="time"
+                        id="incident_time"
+                        name="incident_time"
+                        class="form-control"
+                        value="{% if complaint.incident_time %}{{ complaint.incident_time.strftime('%H:%M') }}{% endif %}"
                     >
 
-
-                    <!-- LONGITUDE -->
-
-                    <input
-                        type="hidden"
-                        id="longitude"
-                        name="longitude"
-                    >
-
-
-                    <!-- BUTTONS -->
-
-                    <div class="mt-5 d-flex justify-content-between">
-
-                        <a
-                            href="{{ url_for('complaint.road_details') }}"
-                            class="btn btn-outline-secondary"
-                        >
-                            ← Previous
-                        </a>
-
-
-                        <button
-                            type="submit"
-                            class="btn btn-success px-5"
-                        >
-                            Next →
-                        </button>
-
-                    </div>
-
-                </form>
+                </div>
 
             </div>
 
         </div>
 
-    </div>
+
+        <!-- =================================================
+             GIS LOCATION
+             ================================================= -->
+
+        <div class="feature-card mb-4">
+
+            <h3 class="mb-3">
+                📍 Select Incident Location
+            </h3>
+
+
+            <p class="text-muted">
+                Use your current location or select the road-damage
+                location directly on the map.
+            </p>
+
+
+            <!-- =================================================
+                 CURRENT LOCATION BUTTON
+                 ================================================= -->
+
+            <div class="mb-4">
+
+                <button
+                    type="button"
+                    id="currentLocationBtn"
+                    class="btn btn-primary"
+                >
+                    📍 Use My Current Location
+                </button>
+
+
+                <span
+                    id="locationStatus"
+                    class="ms-2 text-muted"
+                ></span>
+
+            </div>
+
+
+            <!-- =================================================
+                 MAP
+                 ================================================= -->
+
+            <div
+                id="map"
+                style="
+                    width: 100%;
+                    height: 450px;
+                    border-radius: 12px;
+                    overflow: hidden;
+                    border: 1px solid #ddd;
+                "
+            ></div>
+
+
+            <p class="text-muted mt-3 mb-4">
+
+                You can click on the map to place the marker.
+                You can also drag the marker to adjust the location.
+
+            </p>
+
+
+            <!-- =================================================
+                 COORDINATES
+                 ================================================= -->
+
+            <div class="row">
+
+                <!-- LATITUDE -->
+
+                <div class="col-md-6 mb-3">
+
+                    <label
+                        for="latitude"
+                        class="form-label"
+                    >
+                        Latitude
+                    </label>
+
+                    <input
+                        type="text"
+                        id="latitude"
+                        name="latitude"
+                        class="form-control"
+                        placeholder="Select a location"
+                        value="{{ complaint.latitude if complaint.latitude is not none else '' }}"
+                        readonly
+                        required
+                    >
+
+                </div>
+
+
+                <!-- LONGITUDE -->
+
+                <div class="col-md-6 mb-3">
+
+                    <label
+                        for="longitude"
+                        class="form-label"
+                    >
+                        Longitude
+                    </label>
+
+                    <input
+                        type="text"
+                        id="longitude"
+                        name="longitude"
+                        class="form-control"
+                        placeholder="Select a location"
+                        value="{{ complaint.longitude if complaint.longitude is not none else '' }}"
+                        readonly
+                        required
+                    >
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             INFORMATION
+             ================================================= -->
+
+        <div class="alert alert-info">
+
+            <strong>GIS Location:</strong>
+
+            <br>
+
+            The selected latitude and longitude will be saved
+            with this complaint and used as the reported
+            road-damage location.
+
+        </div>
+
+
+        <!-- =================================================
+             BUTTONS
+             ================================================= -->
+
+        <div class="d-flex justify-content-between mt-4">
+
+            <a
+                href="{{ url_for('complaint.road_details') }}"
+                class="btn btn-outline-secondary"
+            >
+                ← Back
+            </a>
+
+
+            <button
+                type="submit"
+                class="btn btn-success px-4"
+            >
+                Continue to AI Analysis →
+            </button>
+
+        </div>
+
+    </form>
 
 </section>
 
 
+<!-- =========================================================
+     LEAFLET JS
+     ========================================================= -->
+
+<script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+</script>
+
+
+<!-- =========================================================
+     GIS DATA
+     
+     IMPORTANT:
+     Jinja is kept OUTSIDE the JavaScript code.
+     ========================================================= -->
+
+<div
+    id="gis-data"
+    data-latitude="{{ complaint.latitude if complaint.latitude is not none else '' }}"
+    data-longitude="{{ complaint.longitude if complaint.longitude is not none else '' }}"
+    style="display: none;"
+></div>
+
+
 <script>
 
-const gpsBtn = document.getElementById("gpsBtn");
-
-const mapBtn = document.getElementById("mapBtn");
-
-const locationMessage =
-    document.getElementById("locationMessage");
-
-const latitude =
-    document.getElementById("latitude");
-
-const longitude =
-    document.getElementById("longitude");
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
 
 
-/*
-    GPS button
+        // =====================================================
+        // ELEMENTS
+        // =====================================================
 
-    For now this will try to access
-    the browser's GPS.
-
-    Actual map integration can be
-    improved later.
-*/
-
-gpsBtn.addEventListener("click", function () {
-
-    if (!navigator.geolocation) {
-
-        locationMessage.innerHTML =
-            "❌ GPS is not supported by this browser.";
-
-        return;
-
-    }
+        const latitudeInput =
+            document.getElementById("latitude");
 
 
-    locationMessage.innerHTML =
-        "📍 Getting your current location...";
+        const longitudeInput =
+            document.getElementById("longitude");
 
 
-    navigator.geolocation.getCurrentPosition(
-
-        function (position) {
-
-            latitude.value =
-                position.coords.latitude;
-
-            longitude.value =
-                position.coords.longitude;
+        const locationStatus =
+            document.getElementById("locationStatus");
 
 
-            locationMessage.innerHTML =
-                "✅ Current location detected.<br>" +
-                "Latitude: " +
-                position.coords.latitude +
-                "<br>" +
-                "Longitude: " +
-                position.coords.longitude;
+        const currentLocationBtn =
+            document.getElementById("currentLocationBtn");
 
-        },
 
-        function () {
+        const incidentForm =
+            document.getElementById("incidentForm");
 
-            locationMessage.innerHTML =
-                "❌ Unable to access your location. " +
-                "Please allow location permission.";
+
+        const gisData =
+            document.getElementById("gis-data");
+
+
+        // =====================================================
+        // READ EXISTING COORDINATES
+        //
+        // Jinja values are stored in HTML data attributes.
+        // This avoids putting Jinja directly inside JavaScript.
+        // =====================================================
+
+        let initialLatitude = null;
+
+        let initialLongitude = null;
+
+        let initialZoom = 7;
+
+
+        if (gisData) {
+
+            const latitudeValue =
+                gisData.dataset.latitude;
+
+
+            const longitudeValue =
+                gisData.dataset.longitude;
+
+
+            if (
+                latitudeValue !== "" &&
+                longitudeValue !== ""
+            ) {
+
+                const parsedLatitude =
+                    parseFloat(latitudeValue);
+
+
+                const parsedLongitude =
+                    parseFloat(longitudeValue);
+
+
+                if (
+                    !isNaN(parsedLatitude) &&
+                    !isNaN(parsedLongitude)
+                ) {
+
+                    initialLatitude =
+                        parsedLatitude;
+
+
+                    initialLongitude =
+                        parsedLongitude;
+
+
+                    initialZoom = 16;
+
+                }
+
+            }
 
         }
 
-    );
 
-});
+        // =====================================================
+        // DEFAULT LOCATION
+        //
+        // Kerala is used as the initial map location
+        // when no complaint coordinates exist.
+        // =====================================================
+
+        if (
+            initialLatitude === null ||
+            initialLongitude === null
+        ) {
+
+            initialLatitude = 10.8505;
+
+            initialLongitude = 76.2711;
+
+            initialZoom = 7;
+
+        }
 
 
-/*
-    Map button
+        // =====================================================
+        // CREATE MAP
+        // =====================================================
 
-    Actual interactive map will be
-    integrated in the next stage.
-*/
+        const map =
+            L.map("map").setView(
+                [
+                    initialLatitude,
+                    initialLongitude
+                ],
+                initialZoom
+            );
 
-mapBtn.addEventListener("click", function () {
 
-    locationMessage.innerHTML =
-        "🗺️ Map selection will be available here.";
+        // =====================================================
+        // OPENSTREETMAP TILE LAYER
+        // =====================================================
 
-});
+        L.tileLayer(
+            "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+            {
+                maxZoom: 19,
+
+                attribution:
+                    '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>'
+            }
+        ).addTo(map);
+
+
+        // =====================================================
+        // MAP MARKER
+        // =====================================================
+
+        let marker = null;
+
+
+        // =====================================================
+        // UPDATE LOCATION
+        // =====================================================
+
+        function updateLocation(
+            latitude,
+            longitude,
+            zoomMap = true
+        ) {
+
+            // -------------------------------------------------
+            // Validate coordinates
+            // -------------------------------------------------
+
+            if (
+                latitude === null ||
+                longitude === null ||
+                isNaN(latitude) ||
+                isNaN(longitude)
+            ) {
+
+                return;
+
+            }
+
+
+            // -------------------------------------------------
+            // Convert to numbers
+            // -------------------------------------------------
+
+            latitude =
+                parseFloat(latitude);
+
+
+            longitude =
+                parseFloat(longitude);
+
+
+            // -------------------------------------------------
+            // Validate geographic range
+            // -------------------------------------------------
+
+            if (
+                latitude < -90 ||
+                latitude > 90 ||
+                longitude < -180 ||
+                longitude > 180
+            ) {
+
+                locationStatus.textContent =
+                    "Invalid location coordinates.";
+
+                return;
+
+            }
+
+
+            // -------------------------------------------------
+            // Update input fields
+            // -------------------------------------------------
+
+            latitudeInput.value =
+                latitude.toFixed(6);
+
+
+            longitudeInput.value =
+                longitude.toFixed(6);
+
+
+            // -------------------------------------------------
+            // Remove previous marker
+            // -------------------------------------------------
+
+            if (marker) {
+
+                map.removeLayer(marker);
+
+            }
+
+
+            // -------------------------------------------------
+            // Create new marker
+            // -------------------------------------------------
+
+            marker =
+                L.marker(
+                    [
+                        latitude,
+                        longitude
+                    ],
+                    {
+                        draggable: true
+                    }
+                ).addTo(map);
+
+
+            // -------------------------------------------------
+            // Marker popup
+            // -------------------------------------------------
+
+            marker.bindPopup(
+                "<strong>Selected Location</strong><br>" +
+                "Latitude: " +
+                latitude.toFixed(6) +
+                "<br>" +
+                "Longitude: " +
+                longitude.toFixed(6)
+            );
+
+
+            // -------------------------------------------------
+            // Open popup
+            // -------------------------------------------------
+
+            marker.openPopup();
+
+
+            // -------------------------------------------------
+            // Center map
+            // -------------------------------------------------
+
+            if (zoomMap) {
+
+                map.setView(
+                    [
+                        latitude,
+                        longitude
+                    ],
+                    16
+                );
+
+            }
+
+
+            // -------------------------------------------------
+            // Marker drag event
+            // -------------------------------------------------
+
+            marker.on(
+                "dragend",
+                function (event) {
+
+                    const position =
+                        event.target.getLatLng();
+
+
+                    updateLocation(
+                        position.lat,
+                        position.lng,
+                        false
+                    );
+
+
+                    locationStatus.textContent =
+                        "Location updated by dragging the marker.";
+
+                }
+            );
+
+
+            // -------------------------------------------------
+            // Status
+            // -------------------------------------------------
+
+            if (zoomMap) {
+
+                locationStatus.textContent =
+                    "Location selected successfully.";
+
+            }
+
+        }
+
+
+        // =====================================================
+        // LOAD EXISTING LOCATION
+        //
+        // No Jinja code is used here.
+        // =====================================================
+
+        if (
+            gisData &&
+            gisData.dataset.latitude !== "" &&
+            gisData.dataset.longitude !== ""
+        ) {
+
+            const savedLatitude =
+                parseFloat(
+                    gisData.dataset.latitude
+                );
+
+
+            const savedLongitude =
+                parseFloat(
+                    gisData.dataset.longitude
+                );
+
+
+            if (
+                !isNaN(savedLatitude) &&
+                !isNaN(savedLongitude)
+            ) {
+
+                updateLocation(
+                    savedLatitude,
+                    savedLongitude,
+                    false
+                );
+
+
+                locationStatus.textContent =
+                    "Previously selected location loaded.";
+
+            }
+
+        }
+
+
+        // =====================================================
+        // MAP CLICK
+        // =====================================================
+
+        map.on(
+            "click",
+            function (event) {
+
+                updateLocation(
+                    event.latlng.lat,
+                    event.latlng.lng
+                );
+
+
+                locationStatus.textContent =
+                    "Location selected from map.";
+
+            }
+        );
+
+
+        // =====================================================
+        // CURRENT LOCATION / GPS
+        // =====================================================
+
+        currentLocationBtn.addEventListener(
+            "click",
+            function () {
+
+
+                // -------------------------------------------------
+                // Browser support check
+                // -------------------------------------------------
+
+                if (!navigator.geolocation) {
+
+                    locationStatus.textContent =
+                        "Geolocation is not supported by this browser.";
+
+                    return;
+
+                }
+
+
+                // -------------------------------------------------
+                // Status
+                // -------------------------------------------------
+
+                locationStatus.textContent =
+                    "Getting your current location...";
+
+
+                currentLocationBtn.disabled =
+                    true;
+
+
+                // -------------------------------------------------
+                // Get current position
+                // -------------------------------------------------
+
+                navigator.geolocation.getCurrentPosition(
+
+                    function (position) {
+
+
+                        const latitude =
+                            position.coords.latitude;
+
+
+                        const longitude =
+                            position.coords.longitude;
+
+
+                        // -------------------------------------------------
+                        // Update map and marker
+                        // -------------------------------------------------
+
+                        updateLocation(
+                            latitude,
+                            longitude
+                        );
+
+
+                        locationStatus.textContent =
+                            "Current location detected successfully.";
+
+
+                        currentLocationBtn.disabled =
+                            false;
+
+                    },
+
+
+                    function (error) {
+
+
+                        console.log(
+                            "Geolocation error:",
+                            error
+                        );
+
+
+                        if (error.code === 1) {
+
+                            locationStatus.textContent =
+                                "Location permission was denied.";
+
+                        }
+
+
+                        else if (error.code === 2) {
+
+                            locationStatus.textContent =
+                                "Current location is unavailable.";
+
+                        }
+
+
+                        else if (error.code === 3) {
+
+                            locationStatus.textContent =
+                                "Location request timed out.";
+
+                        }
+
+
+                        else {
+
+                            locationStatus.textContent =
+                                "Unable to get your current location.";
+
+                        }
+
+
+                        currentLocationBtn.disabled =
+                            false;
+
+                    },
+
+
+                    {
+                        enableHighAccuracy: true,
+
+                        timeout: 10000,
+
+                        maximumAge: 0
+                    }
+
+                );
+
+            }
+        );
+
+
+        // =====================================================
+        // MAP SIZE FIX
+        //
+        // Helps Leaflet render correctly inside Bootstrap
+        // layouts.
+        // =====================================================
+
+        setTimeout(
+            function () {
+
+                map.invalidateSize();
+
+            },
+            200
+        );
+
+
+        // =====================================================
+        // FORM VALIDATION
+        //
+        // Do not continue without a selected location.
+        // =====================================================
+
+        incidentForm.addEventListener(
+            "submit",
+            function (event) {
+
+                const latitude =
+                    latitudeInput.value.trim();
+
+
+                const longitude =
+                    longitudeInput.value.trim();
+
+
+                if (
+                    latitude === "" ||
+                    longitude === ""
+                ) {
+
+                    event.preventDefault();
+
+
+                    locationStatus.textContent =
+                        "Please select the incident location on the map or use your current location.";
+
+
+                    locationStatus.classList.remove(
+                        "text-muted"
+                    );
+
+
+                    locationStatus.classList.add(
+                        "text-danger"
+                    );
+
+
+                    // Scroll to map
+
+                    document.getElementById(
+                        "map"
+                    ).scrollIntoView({
+                        behavior: "smooth",
+                        block: "center"
+                    });
+
+
+                    return;
+
+                }
+
+
+                // -------------------------------------------------
+                // Reset status
+                // -------------------------------------------------
+
+                locationStatus.classList.remove(
+                    "text-danger"
+                );
+
+
+                locationStatus.classList.add(
+                    "text-muted"
+                );
+
+            }
+        );
+
+
+    }
+);
 
 </script>
+
 
 {% endblock %}
