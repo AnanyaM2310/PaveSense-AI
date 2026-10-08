@@ -83,3 +83,27 @@ def complaint_details(complaint_id):
         "dashboard/complaint_details.html",
         complaint=complaint_record
     )
+# =========================================================
+# TRACK COMPLAINTS
+# =========================================================
+
+@dashboard.route("/track-complaint")
+def track():
+
+    user_id = session.get("user_id")
+
+    if not user_id:
+        return redirect(
+            url_for("auth.login")
+        )
+
+    complaints = Complaint.query.filter_by(
+        user_id=user_id
+    ).order_by(
+        Complaint.created_at.desc()
+    ).all()
+
+    return render_template(
+        "dashboard/track_complaint.html",
+        complaints=complaints
+    )
