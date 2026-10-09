@@ -190,13 +190,11 @@ Track Complaints | PaveSense AI
                                     <strong>
 
                                         {% if complaint.status == "Submitted" %}
-
                                             Pending
-
+                                        {% elif not complaint.status or complaint.status == "Draft" %}
+                                            Draft — Not Submitted
                                         {% else %}
-
-                                            {{ complaint.status or "Draft" }}
-
+                                            {{ complaint.status }}
                                         {% endif %}
 
                                     </strong>
@@ -217,65 +215,50 @@ Track Complaints | PaveSense AI
                         </h5>
 
 
-                        <!-- CREATED -->
+                        {% if not complaint.status or complaint.status == "Draft" %}
 
-                        <div class="d-flex mb-4">
-
-                            <div class="me-3">
-
-                                <span
-                                    class="badge rounded-circle bg-primary p-2"
-                                >
-                                    ✓
-                                </span>
-
-                            </div>
-
-                            <div>
-
-                                <strong>
-                                    Complaint Created
-                                </strong>
-
-                                <p class="text-muted mb-0">
-                                    Your road damage complaint has been created.
-                                </p>
-
-                            </div>
-
-                        </div>
-
-
-                        {% if complaint.status != "Draft" %}
-
-                            <!-- PENDING -->
-
+                            <!-- DRAFT / NOT SUBMITTED -->
                             <div class="d-flex mb-4">
-
                                 <div class="me-3">
-
-                                    <span
-                                        class="badge rounded-circle bg-primary p-2"
-                                    >
-                                        ✓
-                                    </span>
-
+                                    <span class="badge rounded-circle bg-secondary p-2">!</span>
                                 </div>
-
                                 <div>
-
-                                    <strong>
-                                        Pending
-                                    </strong>
-
+                                    <strong>Complaint Not Submitted</strong>
                                     <p class="text-muted mb-0">
-                                        Your complaint has been submitted
-                                        and is waiting for authority review.
+                                        Your complaint is saved as a draft and has not been submitted yet.
                                     </p>
-
                                 </div>
-
                             </div>
+
+                        {% else %}
+
+                            <!-- SUBMITTED -->
+                            <div class="d-flex mb-4">
+                                <div class="me-3">
+                                    <span class="badge rounded-circle bg-primary p-2">✓</span>
+                                </div>
+                                <div>
+                                    <strong>Complaint Submitted</strong>
+                                    <p class="text-muted mb-0">
+                                        Your complaint has been submitted in PaveSense AI and is awaiting further action.
+                                    </p>
+                                </div>
+                            </div>
+
+                            {% if complaint.status == "Submitted" %}
+                                <!-- PENDING -->
+                                <div class="d-flex mb-4">
+                                    <div class="me-3">
+                                        <span class="badge rounded-circle bg-primary p-2">✓</span>
+                                    </div>
+                                    <div>
+                                        <strong>Pending</strong>
+                                        <p class="text-muted mb-0">
+                                            Your complaint is waiting for review or further action.
+                                        </p>
+                                    </div>
+                                </div>
+                            {% endif %}
 
                         {% endif %}
 
@@ -429,7 +412,7 @@ Track Complaints | PaveSense AI
             </h4>
 
             <p class="text-muted">
-                You haven't submitted any road damage complaints yet.
+                You don't have any saved or submitted road damage complaints yet.
             </p>
 
             <a

@@ -11,7 +11,7 @@ from flask import (
     url_for,
     current_app,
     session,
-    flash
+    flash,
 )
 
 from werkzeug.utils import secure_filename
@@ -33,6 +33,39 @@ complaint = Blueprint(
     "complaint",
     __name__
 )
+def recommend_road_authority(road_type):
+    """
+    Recommend a likely authority from the selected road type.
+    This is a recommendation, not a verified ownership lookup.
+    """
+    road_type = (road_type or "").strip().lower()
+
+    recommendations = {
+        "nh": (
+            "NHAI / National Highway Authority",
+            "Verify the highway's actual maintaining authority."
+        ),
+        "sh": (
+            "State PWD / State Highway Division",
+            "Verify the state highway's actual maintaining authority."
+        ),
+        "urban": (
+            "Municipality / Municipal Corporation",
+            "Verify whether the road is maintained by the local body or PWD."
+        ),
+        "rural": (
+            "Gram Panchayat / Local Self Government",
+            "Verify whether the road is maintained by the Panchayat or PWD."
+        ),
+    }
+
+    return recommendations.get(
+        road_type,
+        (
+            "Authority not determined",
+            "Verify the road type and responsible authority."
+        )
+    )
 
 
 # =========================================================
@@ -385,6 +418,13 @@ def road_details():
             ""
         ).strip()
 
+        authority, authority_note = recommend_road_authority(
+            complaint_record.road_type
+        )
+
+        complaint_record.recommended_authority = authority
+        complaint_record.authority_note = authority_note
+
         db.session.commit()
 
         return redirect(
@@ -477,37 +517,53 @@ def incident():
         # GPS LOCATION
         # -------------------------------------------------
 
-        latitude = request.form.get(
-            "latitude"
-        )
+        # GPS LOCATION — SERVER-SIDE VALIDATION
+        latitude_raw = request.form.get("latitude", "").strip()
+        longitude_raw = request.form.get("longitude", "").strip()
 
-        longitude = request.form.get(
-            "longitude"
-        )
+        if not latitude_raw or not longitude_raw:
+            db.session.rollback()
+            flash(
+                "Please select the incident location on the map "
+                "or use your current location.",
+                "danger"
+            )
+            return render_template(
+                "complaint/incident.html",
+                complaint=complaint_record
+            )
 
-        if latitude:
+        try:
+            latitude = float(latitude_raw)
+            longitude = float(longitude_raw)
+        except (ValueError, TypeError):
+            db.session.rollback()
+            flash(
+                "Invalid coordinates. Please select the location again.",
+                "danger"
+            )
+            return render_template(
+                "complaint/incident.html",
+                complaint=complaint_record
+            )
 
-            try:
+        if (
+            not (-90 <= latitude <= 90)
+            or not (-180 <= longitude <= 180)
+        ):
+            db.session.rollback()
+            flash(
+                "Coordinates are outside the valid range. "
+                "Please select the location again.",
+                "danger"
+            )
+            return render_template(
+                "complaint/incident.html",
+                complaint=complaint_record
+            )
 
-                complaint_record.latitude = float(
-                    latitude
-                )
-
-            except (ValueError, TypeError):
-
-                complaint_record.latitude = None
-
-        if longitude:
-
-            try:
-
-                complaint_record.longitude = float(
-                    longitude
-                )
-
-            except (ValueError, TypeError):
-
-                complaint_record.longitude = None
+        complaint_record.latitude = latitude
+        complaint_record.longitude = longitude
 
         # -------------------------------------------------
         # SAVE

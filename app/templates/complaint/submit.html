@@ -1,3 +1,4 @@
+```html
 {% extends "layout/base.html" %}
 
 {% block title %}
@@ -6,256 +7,332 @@ Submit Complaint | PaveSense AI
 
 {% block content %}
 
-<section class="container py-5">
+<div class="container py-5">
 
-    <!-- ================================================= -->
-    <!-- HEADER -->
-    <!-- ================================================= -->
-
+    <!-- PAGE HEADING -->
     <div class="text-center mb-5">
-
-        <h1>
-            Submit Complaint
-        </h1>
-
+        <h1 class="fw-bold">Review & Submit Complaint</h1>
         <p class="text-muted">
-            Confirm your complaint submission.
+            Review your road damage report before confirming submission.
         </p>
-
     </div>
 
+    <!-- FLASH MESSAGES -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show"
+                     role="alert">
+                    {{ message }}
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="alert"
+                            aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
 
-    <!-- ================================================= -->
-    <!-- CONFIRMATION CARD -->
-    <!-- ================================================= -->
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-body p-4 p-md-5">
 
-    <div class="feature-card mx-auto" style="max-width: 850px;">
+            <!-- COMPLAINT ID AND STATUS -->
+            <div class="d-flex justify-content-between align-items-center
+                        flex-wrap gap-2 mb-4">
+                <div>
+                    <h4 class="mb-1">Complaint #{{ complaint.id }}</h4>
+                    <p class="text-muted mb-0">
+                        Please verify the information below.
+                    </p>
+                </div>
 
-        <div class="text-center mb-4">
-
-            <div style="font-size: 55px;">
-                📤
+                <span class="badge bg-secondary fs-6">
+                    {{ complaint.status or "Draft" }}
+                </span>
             </div>
 
-            <h3 class="mt-3">
-                Ready to Submit?
-            </h3>
-
-            <p class="text-muted">
-
-                Please confirm that you want to submit this complaint.
-
-            </p>
-
-        </div>
-
-
-        <!-- ================================================= -->
-        <!-- COMPLAINT SUMMARY -->
-        <!-- ================================================= -->
-
-        <div class="bg-light rounded p-4 mb-4">
-
-            <div class="row">
-
-                <!-- COMPLAINT ID -->
-
-                <div class="col-md-6 mb-3">
-
-                    <strong>
-                        Complaint ID
-                    </strong>
-
-                    <p class="mb-0 text-muted">
-
-                        #{{ complaint.id }}
-
-                    </p>
-
-                </div>
-
-
-                <!-- DAMAGE -->
-
-                <div class="col-md-6 mb-3">
-
-                    <strong>
-                        Detected Damage
-                    </strong>
-
-                    <p class="mb-0 text-muted">
-
-                        {{ complaint.damage_type or "Not analyzed" }}
-
-                    </p>
-
-                </div>
-
-
-                <!-- SEVERITY -->
-
-                <div class="col-md-6 mb-3">
-
-                    <strong>
-                        Severity
-                    </strong>
-
-                    <p class="mb-0">
-
-                        {% if complaint.severity %}
-
-                            {% if complaint.severity|upper == "HIGH" %}
-
-                                <span class="badge bg-danger">
-                                    HIGH
-                                </span>
-
-                            {% elif complaint.severity|upper == "MEDIUM" %}
-
-                                <span class="badge bg-warning text-dark">
-                                    MEDIUM
-                                </span>
-
-                            {% elif complaint.severity|upper == "LOW" %}
-
-                                <span class="badge bg-success">
-                                    LOW
-                                </span>
-
-                            {% else %}
-
-                                <span class="badge bg-secondary">
-                                    {{ complaint.severity }}
-                                </span>
-
-                            {% endif %}
-
-                        {% else %}
-
-                            <span class="text-muted">
-                                Not analyzed
-                            </span>
-
-                        {% endif %}
-
-                    </p>
-
-                </div>
-
-
-                <!-- LOCATION -->
-
-                <div class="col-md-6 mb-3">
-
-                    <strong>
-                        Location
-                    </strong>
-
-                    <p class="mb-0 text-muted">
-
-                        {% if complaint.latitude and complaint.longitude %}
-
-                            {{ complaint.latitude }},
-                            {{ complaint.longitude }}
-
-                        {% elif complaint.district or complaint.state %}
-
-                            {{ complaint.district or "" }}
-                            {% if complaint.district and complaint.state %}
-                                ,
-                            {% endif %}
-                            {{ complaint.state or "" }}
-
-                        {% else %}
-
-                            Location not available
-
-                        {% endif %}
-
-                    </p>
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <!-- ================================================= -->
-        <!-- IMPORTANT NOTE -->
-        <!-- ================================================= -->
-
-        <div class="alert alert-info">
-
-            <strong>
-                Note:
-            </strong>
-
-            <br>
-
-            Submitting this complaint will mark it as
-            <strong>Submitted</strong> in PaveSense AI.
-
-            The complaint is not yet connected to a live government
-            portal or government API.
-
-        </div>
-
-
-        <!-- ================================================= -->
-        <!-- SUBMIT FORM -->
-        <!-- ================================================= -->
-
-        <form
-            method="POST"
-            action="{{ url_for('complaint.submit') }}"
-        >
-
-            <div class="text-center mt-4">
-
-                <button
-                    type="submit"
-                    class="btn btn-success btn-lg px-5 me-2"
+            <hr>
+
+            <!-- IMAGE -->
+            <h5 class="fw-bold mb-3">Road Damage Image</h5>
+
+            {% if complaint.image_path %}
+                <img
+                    src="{{ url_for('static', filename='uploads/' ~ complaint.image_path) }}"
+                    alt="Uploaded road damage"
+                    class="img-fluid rounded-3 mb-4"
+                    style="max-height: 320px; object-fit: contain;"
+                    onerror="this.style.display='none';"
                 >
+            {% else %}
+                <p class="text-muted">No image was uploaded.</p>
+            {% endif %}
 
-                    ✓ Confirm & Submit
+            <!-- COMPLAINT DETAILS -->
+            <h5 class="fw-bold mb-3">Complaint Details</h5>
 
-                </button>
+            <div class="row g-3 mb-4">
 
+                <div class="col-md-6">
+                    <div class="p-3 bg-light rounded-3 h-100">
+                        <strong>Original Description</strong>
+                        <p class="mb-0 mt-2">
+                            {{ complaint.description or "Not provided" }}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="p-3 bg-light rounded-3 h-100">
+                        <strong>English Description</strong>
+                        <p class="mb-0 mt-2">
+                            {{ complaint.english_description or "Not available" }}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="p-3 bg-light rounded-3 h-100">
+                        <strong>Detected Severity</strong>
+                        <p class="mb-0 mt-2">
+                            {{ complaint.severity or "Not analyzed" }}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="p-3 bg-light rounded-3 h-100">
+                        <strong>Language</strong>
+                        <p class="mb-0 mt-2">
+                            {{ complaint.language or "Not specified" }}
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- APPLICANT DETAILS -->
+            <h5 class="fw-bold mb-3">Applicant Information</h5>
+
+            <div class="row g-3 mb-4">
+
+                <div class="col-md-6">
+                    <strong>Name</strong>
+                    <p>{{ complaint.applicant_name or "Not provided" }}</p>
+                </div>
+
+                <div class="col-md-6">
+                    <strong>Email</strong>
+                    <p>{{ complaint.email or "Not provided" }}</p>
+                </div>
+
+                <div class="col-md-6">
+                    <strong>Phone</strong>
+                    <p>{{ complaint.phone or "Not provided" }}</p>
+                </div>
+
+                <div class="col-md-6">
+                    <strong>Address</strong>
+                    <p>
+                        {{ complaint.address or "Not provided" }}
+                    </p>
+                </div>
+
+            </div>
+
+            <!-- INCIDENT LOCATION -->
+            <h5 class="fw-bold mb-3">Incident Location</h5>
+
+            <div class="row g-3 mb-4">
+
+                <div class="col-md-6">
+                    <strong>Country</strong>
+                    <p>{{ complaint.country or "Not provided" }}</p>
+                </div>
+
+                <div class="col-md-6">
+                    <strong>State</strong>
+                    <p>{{ complaint.state or "Not provided" }}</p>
+                </div>
+
+                <div class="col-md-6">
+                    <strong>District</strong>
+                    <p>{{ complaint.district or "Not provided" }}</p>
+                </div>
+
+                <div class="col-md-6">
+                    <strong>Local Body</strong>
+                    <p>{{ complaint.local_body or "Not provided" }}</p>
+                </div>
+
+                <div class="col-md-6">
+                    <strong>Ward</strong>
+                    <p>{{ complaint.ward or "Not provided" }}</p>
+                </div>
+
+                <div class="col-md-6">
+                    <strong>PIN Code</strong>
+                    <p>{{ complaint.pincode or "Not provided" }}</p>
+                </div>
+
+                <div class="col-md-6">
+                    <strong>Latitude</strong>
+                    <p>{{ complaint.latitude if complaint.latitude is not none else "Not available" }}</p>
+                </div>
+
+                <div class="col-md-6">
+                    <strong>Longitude</strong>
+                    <p>{{ complaint.longitude if complaint.longitude is not none else "Not available" }}</p>
+                </div>
+
+                {% if complaint.latitude is not none
+                      and complaint.longitude is not none %}
+                    <div class="col-12">
+                        <a
+                            href="https://www.google.com/maps?q={{ complaint.latitude }},{{ complaint.longitude }}"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="btn btn-outline-primary btn-sm"
+                        >
+                            📍 View Location on Google Maps
+                        </a>
+                    </div>
+                {% endif %}
+
+            </div>
+
+            <!-- ROAD DETAILS -->
+            <h5 class="fw-bold mb-3">Road & Authority Details</h5>
+
+            <div class="row g-3 mb-4">
+
+                <div class="col-md-6">
+                    <strong>Road Type</strong>
+                    <p>{{ complaint.road_type or "Not specified" }}</p>
+                </div>
+
+                <div class="col-md-6">
+                    <strong>National Highway Number</strong>
+                    <p>{{ complaint.nh_number or "Not applicable" }}</p>
+                </div>
+
+                <div class="col-md-6">
+                    <strong>Highway State</strong>
+                    <p>{{ complaint.highway_state or "Not applicable" }}</p>
+                </div>
+
+                <div class="col-md-6">
+                    <strong>State Highway Number</strong>
+                    <p>{{ complaint.sh_number or "Not applicable" }}</p>
+                </div>
+
+                <div class="col-12">
+                    <div class="alert alert-info mb-0">
+                        <strong>Recommended Authority</strong>
+                        <p class="mb-1 mt-2">
+                            {{ complaint.recommended_authority
+                               or "Authority not determined" }}
+                        </p>
+
+                        {% if complaint.authority_note %}
+                            <small>
+                                {{ complaint.authority_note }}
+                            </small>
+                        {% endif %}
+
+                        <hr>
+
+                        <small>
+                            This is an initial recommendation. Verify the
+                            actual road-maintaining authority before sending
+                            the complaint to a government portal.
+                        </small>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- INCIDENT DATE AND TIME -->
+            <h5 class="fw-bold mb-3">Incident Date & Time</h5>
+
+            <div class="row g-3 mb-4">
+
+                <div class="col-md-6">
+                    <strong>Incident Date</strong>
+                    <p>
+                        {% if complaint.incident_date %}
+                            {{ complaint.incident_date.strftime('%d-%m-%Y') }}
+                        {% else %}
+                            Not provided
+                        {% endif %}
+                    </p>
+                </div>
+
+                <div class="col-md-6">
+                    <strong>Incident Time</strong>
+                    <p>
+                        {% if complaint.incident_time %}
+                            {{ complaint.incident_time.strftime('%H:%M') }}
+                        {% else %}
+                            Not provided
+                        {% endif %}
+                    </p>
+                </div>
+
+            </div>
+
+            <!-- GENERATED COMPLAINT -->
+            <h5 class="fw-bold mb-3">Generated Complaint</h5>
+
+            <div class="p-3 p-md-4 bg-light rounded-3 mb-4">
+                {% if complaint.complaint_text %}
+                    <div style="white-space: pre-wrap;">{{ complaint.complaint_text }}</div>
+                {% else %}
+                    <p class="text-muted mb-0">
+                        No generated complaint text is available yet.
+                        Please return to the preview page and check the
+                        AI-generated complaint before submission.
+                    </p>
+                {% endif %}
+            </div>
+
+            <!-- IMPORTANT NOTICE -->
+            <div class="alert alert-warning">
+                <strong>Important:</strong>
+                Confirming below records this complaint as Submitted in
+                PaveSense AI. It does not, by itself, guarantee that the
+                complaint has been submitted to an external government portal.
+            </div>
+
+            <!-- ACTION BUTTONS -->
+            <div class="d-flex flex-wrap gap-3 mt-4">
 
                 <a
                     href="{{ url_for('complaint.preview') }}"
-                    class="btn btn-outline-secondary btn-lg px-4"
+                    class="btn btn-outline-secondary rounded-pill px-4"
                 >
-
-                    ← Go Back
-
+                    ← Back to Preview
                 </a>
+
+                <form
+                    method="POST"
+                    action="{{ url_for('complaint.submit') }}"
+                    onsubmit="return confirm('Have you reviewed the details and want to mark this complaint as submitted in PaveSense AI?');"
+                >
+                    <button
+                        type="submit"
+                        class="btn btn-success rounded-pill px-4"
+                    >
+                        Confirm & Submit Complaint
+                    </button>
+                </form>
 
             </div>
 
-        </form>
-
+        </div>
     </div>
 
-
-    <!-- ================================================= -->
-    <!-- DASHBOARD -->
-    <!-- ================================================= -->
-
-    <div class="text-center mt-5">
-
-        <a
-            href="{{ url_for('dashboard.home') }}"
-            class="btn btn-outline-dark"
-        >
-
-            ← Dashboard
-
-        </a>
-
-    </div>
-
-</section>
+</div>
 
 {% endblock %}
+```

@@ -45,6 +45,10 @@ class Complaint(db.Model):
     highway_state = db.Column(db.String(80))
     sh_number = db.Column(db.String(20))
 
+    # Recommended road authority
+    recommended_authority = db.Column(db.String(150))
+    authority_note = db.Column(db.String(255))
+
     # Location
     latitude = db.Column(db.Float)
     longitude = db.Column(db.Float)

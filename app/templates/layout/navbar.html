@@ -3,7 +3,8 @@
     <div class="container">
 
         <!-- Logo -->
-        <a class="navbar-brand fw-bold" href="{{ url_for('dashboard.home') }}">
+        <a class="navbar-brand fw-bold"
+           href="{{ url_for('dashboard.home') }}">
             🚧 PaveSense AI
         </a>
 
@@ -11,7 +12,10 @@
         <button class="navbar-toggler"
                 type="button"
                 data-bs-toggle="collapse"
-                data-bs-target="#navbarNav">
+                data-bs-target="#navbarNav"
+                aria-controls="navbarNav"
+                aria-expanded="false"
+                aria-label="Toggle navigation">
 
             <span class="navbar-toggler-icon"></span>
 
@@ -24,28 +28,32 @@
 
                 <!-- Features -->
                 <li class="nav-item">
-                    <a class="nav-link" href="#how-it-works">
+                    <a class="nav-link"
+                       href="{{ url_for('dashboard.home') }}#how-it-works">
                         Features
                     </a>
                 </li>
 
                 <!-- About -->
                 <li class="nav-item">
-                    <a class="nav-link" href="#">
+                    <a class="nav-link"
+                       href="{{ url_for('dashboard.home') }}#about">
                         About
                     </a>
                 </li>
 
                 <!-- Dashboard -->
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('dashboard.home') }}">
+                    <a class="nav-link"
+                       href="{{ url_for('dashboard.home') }}">
                         Dashboard
                     </a>
                 </li>
 
                 <!-- Profile -->
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('profile.home') }}">
+                    <a class="nav-link"
+                       href="{{ url_for('profile.home') }}">
                         Profile
                     </a>
                 </li>
