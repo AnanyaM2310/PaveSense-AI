@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, session
 
 from app.models.complaint import Complaint
 
+from app.services.duplicate_grouping import get_duplicate_count
 
 dashboard = Blueprint(
     "dashboard",
@@ -51,10 +52,16 @@ def history():
         Complaint.created_at.desc()
     ).all()
 
+    for complaint in complaints:
+        complaint.duplicate_count = get_duplicate_count(
+            complaint.duplicate_group_id
+        )
+
     return render_template(
         "dashboard/history.html",
         complaints=complaints
     )
+    
 
 
 # =========================================================
@@ -103,7 +110,13 @@ def track():
         Complaint.created_at.desc()
     ).all()
 
+    for complaint in complaints:
+        complaint.duplicate_count = get_duplicate_count(
+            complaint.duplicate_group_id
+        )
+
     return render_template(
         "dashboard/track_complaint.html",
         complaints=complaints
     )
+    

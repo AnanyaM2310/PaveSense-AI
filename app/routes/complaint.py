@@ -15,6 +15,7 @@ from flask import (
 )
 
 from werkzeug.utils import secure_filename
+from sqlalchemy import and_
 
 from app.database.db import db
 from app.models.complaint import Complaint
@@ -24,6 +25,8 @@ from app.ai.translator import translate_to_english
 from app.ai.image_analyzer import analyze_image
 from app.ai.complaint_generator import generate_complaint
 
+from app.services.duplicate_grouping import group_duplicate_complaint
+from app.email.email_service import send_registration_email
 
 # =========================================================
 # BLUEPRINT
@@ -66,7 +69,17 @@ def recommend_road_authority(road_type):
             "Verify the road type and responsible authority."
         )
     )
+def get_current_complaint():
+    user_id = session.get("user_id")
+    complaint_id = session.get("complaint_id")
 
+    if not user_id or not complaint_id:
+        return None
+
+    return Complaint.query.filter_by(
+        id=complaint_id,
+        user_id=user_id
+    ).first()
 
 # =========================================================
 # UPLOAD COMPLAINT
@@ -762,6 +775,7 @@ def analysis():
 
     if result.get("success"):
 
+        
         # -------------------------------------------------
         # SAVE AI INFORMATION TO DATABASE
         # -------------------------------------------------
@@ -777,6 +791,12 @@ def analysis():
         complaint_record.ai_confidence = result.get(
             "confidence"
         )
+
+        # -------------------------------------------------
+        # GROUP DUPLICATE COMPLAINTS
+        # -------------------------------------------------
+
+        group_duplicate_complaint(complaint_record)
 
         db.session.commit()
 
@@ -863,7 +883,7 @@ def analysis():
             "complaint.preview"
         )
     )
-
+    group_duplicate_complaint(complaint_record)
 
 # =========================================================
 # LOW-CONFIDENCE ANALYSIS CONFIRMATION
@@ -984,6 +1004,30 @@ def confirm_analysis():
         # -------------------------------------------------
 
         result["user_confirmed"] = True
+
+        # -------------------------------------------------
+        # SAVE THE CONFIRMED AI DETECTION
+        # -------------------------------------------------
+
+        complaint_record.damage_type = result.get(
+            "damage_type"
+        )
+
+        complaint_record.severity = result.get(
+            "severity"
+        )
+
+        complaint_record.ai_confidence = result.get(
+            "confidence"
+        )
+
+        # -------------------------------------------------
+        # GROUP ONLY AFTER USER CONFIRMATION
+        # -------------------------------------------------
+
+        group_duplicate_complaint(complaint_record)
+
+        db.session.commit()
 
         # -------------------------------------------------
         # GENERATE COMPLAINT ONLY NOW
@@ -1207,52 +1251,72 @@ def save_draft():
 # SUBMIT COMPLAINT
 # =========================================================
 
-@complaint.route(
-    "/submit",
-    methods=["GET", "POST"]
-)
-def submit():
 
-    complaint_id = session.get(
-        "complaint_id"
-    )
+@complaint.route("/submit", methods=["GET", "POST"])
+def submit():
+    complaint_id = session.get("complaint_id")
 
     if not complaint_id:
+        return redirect(url_for("complaint.upload"))
 
-        return redirect(
-            url_for(
-                "complaint.upload"
-            )
-        )
-
-    complaint_record = Complaint.query.get_or_404(
-        complaint_id
-    )
-
-    # -----------------------------------------------------
-    # GET REQUEST
-    # -----------------------------------------------------
+    complaint_record = Complaint.query.get_or_404(complaint_id)
 
     if request.method == "GET":
-
         return render_template(
             "complaint/submit.html",
             complaint=complaint_record
         )
 
-    # -----------------------------------------------------
-    # POST REQUEST
-    # -----------------------------------------------------
+    # Avoid resending the confirmation email if already submitted.
+    if complaint_record.status == "Submitted":
+        return redirect(
+            url_for("complaint.success", action="submitted")
+        )
 
     complaint_record.status = "Submitted"
 
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception("Complaint submission failed.")
+        flash(
+            "The complaint could not be submitted. Please try again.",
+            "danger"
+        )
+        return redirect(url_for("complaint.submit"))
+
+    # Use the email saved from the road-reporting form,
+    # not the logged-in website account.
+    email_sent, email_message = send_registration_email(
+        recipient=complaint_record.email,
+        applicant_name=complaint_record.applicant_name,
+        complaint_id=(
+            complaint_record.complaint_number
+            or complaint_record.id
+        )
+    )
+
+    if email_sent:
+        flash(
+            "Your complaint has been submitted. "
+            "A confirmation email has been sent to the reporting contact.",
+            "success"
+        )
+    else:
+        current_app.logger.warning(
+            "Complaint #%s email notification: %s",
+            complaint_record.id,
+            email_message
+        )
+        flash(
+            "Your complaint has been submitted, but the confirmation "
+            "email could not be sent. Please check the reporting email address.",
+            "warning"
+        )
 
     return redirect(
-        url_for(
-            "complaint.success",
-            action="submitted"
-        )
+        url_for("complaint.success", action="submitted")
     )
 
 

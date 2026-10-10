@@ -110,6 +110,14 @@ My Complaints | PaveSense AI
 
                                 {% endif %}
                             </p>
+                            {% if complaint.duplicate_group_id %}
+                                <p>
+                                    <strong>Related reports:</strong>
+                                    <span class="badge bg-info text-dark">
+                                        {{ complaint.duplicate_count }} reports of this issue
+                                    </span>
+                                </p>
+                            {% endif %}
 
 
                             <!-- SEVERITY -->

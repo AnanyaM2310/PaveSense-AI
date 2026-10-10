@@ -67,3 +67,10 @@ class Complaint(db.Model):
     complaint_number = db.Column(db.String(50))
     
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Duplicate complaint grouping
+    duplicate_group_id = db.Column(
+        db.String(36),
+        nullable=True,
+        index=True
+    )
